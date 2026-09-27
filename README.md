@@ -10,6 +10,15 @@
 >
 >---
 >---
+>## Integrantes del Equipo
+>| Nombre Completo | Carné | Rol / Responsabilidad |
+>| :--- | :---: | :--- |
+>| Jehosua Abdiel Cañas Tijerino | CT24001 |
+>| Alexis Jonathan Mazariego Mazariego| MM24002 |
+>| Joseline Rosible Aldana Aldana | AA13081 |
+>| Jorge Mario Meléndez | MC25066 |
+>| Jason Isaac Rogríguez Pérez | RP21005 |
+
 >## 📝 Descripción del Proyecto
 >
 >Este proyecto consiste en el desarrollo de una API para la gestión integral de un gimnasio. El sistema automatiza el control de clases recurrentes impartidas por entrenadores, el autoregistro e inscripción de miembros, el control automático de cupo, la prevención de traslapes de horario y la gestión detallada de asistencia por sesión.

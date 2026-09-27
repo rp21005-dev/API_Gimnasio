@@ -11,8 +11,8 @@
 >---
 >---
 >## Integrantes del Equipo
->| Nombre Completo | Carné | Rol / Responsabilidad |
->| :--- | :---: | :--- |
+>| Nombre Completo | Carné |
+>| :--- | :---: |
 >| Jehosua Abdiel Cañas Tijerino | CT24001 |
 >| Alexis Jonathan Mazariego Mazariego| MM24002 |
 >| Joseline Rosible Aldana Aldana | AA13081 |

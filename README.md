@@ -1,8 +1,9 @@
 # API_Gimnasio - Proyecto API para la gestion de gimnasio
+
 >** Universidad de El Salvador**
 >**Facultad Multidisciplinaria de Occidente**
->**Asignatura: Programación Orientada a Objetos (POO) - Ciclo II/2026**
->**Carrera: Ingeniería en Desarrollo de Software / Educación en Línea**
+>**Asignatura:** Programación Orientada a Objetos (POO) - Ciclo II/2026**
+>**Carrera:** Ingeniería en Desarrollo de Software / Educación en Línea**
 >
 >---
 >## 📝 Descripción del Proyecto

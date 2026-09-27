@@ -15,7 +15,7 @@
 >| :--- | :---: |
 >| Jehosua Abdiel Cañas Tijerino | CT24001 |
 >| Alexis Jonathan Mazariego Mazariego| MM24002 |
->| Joseline Rosible Aldana Aldana | AA13081 |
+>| Joseline Rosibel Aldana Aldana | AA13081 |
 >| Jorge Mario Meléndez | MC25066 |
 >| Jason Isaac Rogríguez Pérez | RP21005 |
 

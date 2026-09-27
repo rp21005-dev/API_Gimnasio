@@ -11,7 +11,7 @@
 >---
 >---
 >## Integrantes del Equipo
->| Nombre Completo | Carné |
+>| Nombre Completo | Carnét |
 >| :--- | :---: |
 >| Jehosua Abdiel Cañas Tijerino | CT24001 |
 >| Alexis Jonathan Mazariego Mazariego| MM24002 |

@@ -86,13 +86,15 @@ Un miembro no puede inscribirse dos veces en la misma clase.
 Al cancelar una inscripción, el lugar vuelve a estar disponible.
 Solo se registra la asistencia de miembros inscritos en la clase.
 Cada miembro tiene un único registro de asistencia por clase.
-Respuestas de la API
-Código	Significado
-200 OK	Consulta o actualización correcta.
-201 Created	Registro creado.
-204 No Content	Registro eliminado.
-400 Bad Request	Datos incompletos o con formato inválido.
-404 Not Found	El registro solicitado no existe.
-409 Conflict	La operación viola una regla de negocio, por ejemplo inscribirse en una clase sin cupo disponible.
+## 📨 Respuestas de la API
+
+| Código | Nombre | Significado |
+| :---: | :--- | :--- |
+| `200` | OK | Consulta o actualización correcta. |
+| `201` | Created | Registro creado. |
+| `204` | No Content | Registro eliminado. |
+| `400` | Bad Request | Datos incompletos o con formato inválido. |
+| `404` | Not Found | El registro solicitado no existe. |
+| `409` | Conflict | La operación viola una regla de negocio, por ejemplo inscribirse en una clase sin cupo disponible. |
 =======
 >>>>>>> Stashed changes

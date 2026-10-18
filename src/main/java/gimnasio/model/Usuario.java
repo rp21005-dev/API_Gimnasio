@@ -1,4 +1,4 @@
-package model;
+package gimnasio.model;
 import  lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -15,3 +15,4 @@ public class Usuario {
     private String contrasenaHash;
     private String estado;
 }
+

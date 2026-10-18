@@ -1,4 +1,7 @@
 package gimnasio.controller;
+import gimnasio.dto.EntrenadorRequestDTO;
+import gimnasio.dto.EntrenadorResponseDTO;
+import gimnasio.dto.EntrenadorUpdateDTO;
 import gimnasio.model.Entrenador;
 import gimnasio.service.EntrenadorService;
 import jakarta.validation.Valid;
@@ -19,7 +22,7 @@ public class EntrenadorController {
 
     //Agregar Entrenador
     @PostMapping
-    public ResponseEntity<Entrenador>crearEntrenador(@RequestBody EntrenadorDTO entrenadorDTO){
+    public ResponseEntity<Entrenador>crearEntrenador(@RequestBody EntrenadorRequestDTO entrenadorDTO){
         Entrenador nuevoEntrenador = entrenadorService.crearEntrenador(entrenadorDTO);
         return ResponseEntity.status(201).body(nuevoEntrenador);
     }

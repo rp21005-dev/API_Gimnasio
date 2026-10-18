@@ -37,6 +37,9 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
+    // Seguridad para contraseñas
+    implementation("org.springframework.security:spring-security-crypto")
+
 }
 
 tasks.test {

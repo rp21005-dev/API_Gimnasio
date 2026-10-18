@@ -1,12 +1,11 @@
 package gimnasio.model;
-import  lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Data // Getters/Setter
+@Data
+@Getter
+@Setter// Getters/Setter
 @NoArgsConstructor //Constructor vacio
 @AllArgsConstructor // Contructo con los argumentos
-
 public class Entrenador extends Usuario{
     private String nombres;
     private String apellidos;

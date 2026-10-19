@@ -7,4 +7,6 @@ import java.util.Optional;
 @Repository
 public interface EntrenadorRepository extends JpaRepository<Entrenador , Long> {
     Optional<Entrenador> findByCorreo(String entrenador);
+
+    boolean existsByCorreoAndIdNot(String correo, Long id);
 }

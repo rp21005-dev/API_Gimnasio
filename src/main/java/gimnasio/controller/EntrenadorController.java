@@ -7,6 +7,7 @@ import gimnasio.service.EntrenadorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -22,15 +23,15 @@ public class EntrenadorController {
 
     //Agregar Entrenador
     @PostMapping
-    public ResponseEntity<Entrenador>crearEntrenador(@RequestBody EntrenadorRequestDTO entrenadorDTO){
-        Entrenador nuevoEntrenador = entrenadorService.crearEntrenador(entrenadorDTO);
-        return ResponseEntity.status(201).body(nuevoEntrenador);
+    public ResponseEntity<EntrenadorResponseDTO>crearEntrenador(@Valid @RequestBody EntrenadorRequestDTO entrenadorDTO){
+        return ResponseEntity.status(HttpStatus.CREATED).body(entrenadorService.crearEntrenador(entrenadorDTO));
     }
 
     //Obtener todos los entrenadores
     @GetMapping()
     public List<Entrenador> obtenerTodosLosEntrenadores(){
-        return entrenadorService.obtenerTodos();
+
+        return entrenadorService.listarEntrenador();
     }
 
     //Actualizar
@@ -42,7 +43,7 @@ public class EntrenadorController {
     //Eliminar entrenador
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
-        entrenadorService.eliminar(id);
+        entrenadorService.eliminarEntrenador(id);
         return ResponseEntity.noContent().build();
     }
 }

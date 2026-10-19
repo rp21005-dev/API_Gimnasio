@@ -40,6 +40,7 @@ public class AdministradorService {
         return administradorRepository.findAll();
     }
 
+    ///Elimnar un administrador
     @Transactional
     public void eliminarAdministrador(Long id) {
         if (!administradorRepository.existsById(id)) {
@@ -48,11 +49,14 @@ public class AdministradorService {
         administradorRepository.deleteById(id);
     }
 
+    //Buscar por id
     private Administrador buscar(Long id) {
-        return administradorRepository.findById(id).orElseThrow(() -> new IllegalStateException("Entrenador no encontrado con id " + id));
+            return administradorRepository.findById(id).orElseThrow(() -> new IllegalStateException("Administrador no encontrado con id " + id));
     }
 
 
+
+    // Actualizar
     @Transactional
     public AdministradorResponseDTO actualizar(Long id, AdministradorUpdateDTO dto) {
 

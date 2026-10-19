@@ -1,18 +1,17 @@
 package gimnasio.dto;
-
-import jakarta.validation.constraints.*;
-import jdk.jshell.Snippet;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+
 import java.time.LocalDate;
 
-@Data
-@Builder
+
 @NoArgsConstructor
 @AllArgsConstructor
+@Data
+@Builder
 public class MiembroResponseDTO {
 
     private Long id;

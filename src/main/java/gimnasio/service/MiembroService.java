@@ -1,8 +1,6 @@
 package gimnasio.service;
 import gimnasio.dto.*;
-import gimnasio.model.Entrenador;
 import gimnasio.model.Miembro;
-import gimnasio.repositoy.EntrenadorRepository;
 import gimnasio.repositoy.MiembroRepositoy;
 import gimnasio.exception.ConflictException;
 
@@ -20,6 +18,8 @@ public class MiembroService {
 
     private MiembroRepositoy miembroRepositoy;
     private final PasswordEncoder passwordEncoder;
+
+
     @Transactional
     public MiembroResponseDTO crearMiembro(MiembroRequestDTO dto){
         if (miembroRepositoy.findByCorreo(dto.getCorreo()).isPresent()){

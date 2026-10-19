@@ -3,8 +3,14 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Repository;
 
+
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 public class EntrenadorUpdateDTO {
     @NotBlank(message = "Los nombres son obligatorios")

@@ -1,10 +1,17 @@
 package gimnasio.dto;
 
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 
+
+
+@NoArgsConstructor
+@AllArgsConstructor
 @Data
 public class MiembroUpdateDTO {
     @NotBlank(message = "Los nombres son obligatorios")

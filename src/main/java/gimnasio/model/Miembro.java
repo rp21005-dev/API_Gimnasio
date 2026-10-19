@@ -6,9 +6,10 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDate;
 
 
-@Data
+
 @AllArgsConstructor
 @NoArgsConstructor
+@Data
 public class Miembro  extends Usuario{
     private String nombres;
     private String apellidos;
@@ -16,6 +17,5 @@ public class Miembro  extends Usuario{
     private String telefono;
     private LocalDate fechaNacimiento;
     private LocalDate fechaRegistro;
-
 
 }

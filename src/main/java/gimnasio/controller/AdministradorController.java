@@ -25,7 +25,7 @@ public class AdministradorController {
 
     //Agregar Entrenador
     @PostMapping
-    public ResponseEntity<Administrador>crearAdministrador(@RequestBody AdministradorRequestDTO administradorDTO){
+    public ResponseEntity<Administrador>crearAdministrador(@Valid @RequestBody AdministradorRequestDTO administradorDTO){
         Administrador nuevoAdministrador = administradorService.crearAdministrador(administradorDTO);
         return ResponseEntity.status(201).body(nuevoAdministrador);
     }
@@ -38,7 +38,7 @@ public class AdministradorController {
 
     //Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<AdministradorResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody AdministradorUpdateDTO dto) {
+    public ResponseEntity<AdministradorResponseDTO> actualizar(@Valid @PathVariable Long id, @Valid @RequestBody AdministradorUpdateDTO dto) {
         return ResponseEntity.ok(administradorService.actualizar(id, dto));
     }
 

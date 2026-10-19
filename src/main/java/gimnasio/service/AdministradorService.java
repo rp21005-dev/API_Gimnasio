@@ -2,17 +2,14 @@ package gimnasio.service;
 import gimnasio.dto.AdministradorResponseDTO;
 import gimnasio.dto.AdministradorUpdateDTO;
 import gimnasio.model.Administrador;
-import gimnasio.model.Administrador;
 import gimnasio.repositoy.AdministradorRepository;
 import gimnasio.dto.AdministradorRequestDTO;
 import gimnasio.exception.ConflictException;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor

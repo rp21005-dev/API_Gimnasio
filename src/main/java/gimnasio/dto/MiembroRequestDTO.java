@@ -9,7 +9,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 
-@Repository
 @NoArgsConstructor
 @AllArgsConstructor
 @Data

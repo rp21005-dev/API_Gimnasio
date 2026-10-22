@@ -1,9 +1,9 @@
 # 🏋️ API_Gimnasio
-### API REST para la gestión de clases de gimnasio
+### API REST para la gestión de usuarios de un gimnasio
 
-API REST desarrollada en Java para administrar las operaciones principales de un gimnasio, incluyendo la gestión de entrenadores, miembros, clases, inscripciones y asistencias.
+API REST desarrollada en Java con Spring Boot para administrar a los **administradores**, **entrenadores** y **miembros** de un gimnasio. La información se guarda en una base de datos PostgreSQL y el acceso está protegido con inicio de sesión mediante tokens JWT.
 
-El sistema aplica reglas de negocio para controlar los cupos disponibles, evitar inscripciones duplicadas y garantizar que los registros de asistencia correspondan a miembros inscritos.
+El proyecto aplica los temas vistos en la Unidad 6 de la materia: caché con `@Cacheable`, registro de eventos con SLF4J, seguridad con Spring Security y JWT, y pruebas con JUnit 5, Mockito y JaCoCo.
 
 ---
 
@@ -29,244 +29,212 @@ El sistema aplica reglas de negocio para controlar los cupos disponibles, evitar
 
 ---
 
-## 📋 Descripción del proyecto
-
-El proyecto consiste en el desarrollo de una API REST orientada a la gestión integral de las clases de un gimnasio. Su objetivo es facilitar la administración de los recursos y participantes, permitiendo organizar las clases impartidas por los entrenadores y gestionar las inscripciones y la asistencia de los miembros.
-
-La API centraliza la información y aplica reglas de negocio que ayudan a mantener la integridad de los datos. Entre sus funcionalidades principales se encuentra el control automático de cupos, la prevención de inscripciones duplicadas y la validación de los participantes antes de registrar su asistencia.
-
-## 🎯 Objetivos
-
-- Implementar una API REST para administrar las operaciones de un gimnasio.
-- Aplicar los principios de la Programación Orientada a Objetos.
-- Facilitar la gestión de entrenadores, miembros y clases.
-- Controlar las inscripciones según la disponibilidad de cupos.
-- Mantener un registro organizado de la asistencia a las clases.
-- Aplicar validaciones para garantizar la consistencia de la información.
-
----
-
-## 🛠️ Tecnologías y herramientas
+## 🛠️ Tecnologías
 
 | Tecnología | Uso |
 |---|---|
-| **Java** | Lenguaje de programación principal. |
-| **Gradle** | Gestión de dependencias y automatización de la compilación. |
-| **API REST** | Interfaz para gestionar los recursos del sistema mediante solicitudes HTTP. |
-| **Git** | Control de versiones del proyecto. |
-| **GitHub** | Alojamiento y colaboración en el repositorio. |
+| **Java + Spring Boot** | Lenguaje y framework principal de la API. |
+| **Spring Data JPA** | Guardar y consultar los datos en la base de datos. |
+| **PostgreSQL** | Base de datos. |
+| **Spring Security + JWT** | Inicio de sesión y protección de los endpoints. |
+| **Spring Cache** | Guardar en memoria las consultas por ID. |
+| **SLF4J (Lombok `@Slf4j`)** | Registro de eventos (logs). |
+| **JUnit 5, Mockito y JaCoCo** | Pruebas y reporte de cobertura. |
+| **Lombok** | Generar getters, setters y constructores. |
+| **Gradle** | Compilar y ejecutar el proyecto. |
 
 ---
 
-## ⚙️ Funcionalidades principales
+## 🧩 Estructura del proyecto
 
-### 1. Gestión de entrenadores
+El código está organizado en capas dentro de `src/main/java/gimnasio`:
 
-Permite registrar, consultar, actualizar y eliminar entrenadores. Cada clase debe estar asociada a un entrenador responsable.
-
-### 2. Gestión de miembros
-
-Permite administrar la información de los miembros del gimnasio. Los miembros registrados pueden inscribirse en las clases que tengan cupos disponibles.
-
-### 3. Gestión de clases
-
-Permite crear, consultar, actualizar y eliminar clases, definiendo el entrenador responsable, el horario y la capacidad máxima de participantes.
-
-### 4. Gestión de inscripciones
-
-Permite registrar a los miembros en las clases, consultar las inscripciones existentes y cancelar una inscripción. Al cancelar, el cupo ocupado vuelve a estar disponible.
-
-### 5. Control de asistencia
-
-Permite registrar y consultar la asistencia de los miembros inscritos en una clase, así como actualizar el registro cuando sea necesario.
-
-### 6. Control de cupos
-
-Verifica la disponibilidad antes de aceptar una inscripción, impide superar la capacidad máxima de una clase y actualiza los lugares disponibles cuando se realizan inscripciones o cancelaciones.
-
----
-
-## 🧩 Entidades principales
-
-| Entidad | Descripción |
+| Paquete | Contenido |
 |---|---|
-| **Entrenador** | Persona responsable de impartir una o varias clases. |
-| **Miembro** | Cliente del gimnasio que puede inscribirse en las clases. |
-| **Clase** | Actividad programada con un entrenador, un horario y un cupo máximo. |
-| **Inscripción** | Registro que relaciona a un miembro con una clase y reserva un cupo. |
-| **Asistencia** | Registro que indica si un miembro inscrito asistió a una clase. |
+| `model` | Entidades. `Usuario` es la clase padre (correo, contraseña y estado) y de ella heredan `Administrador`, `Entrenador` y `Miembro`. |
+| `dto` | Objetos para recibir y devolver datos. Las respuestas nunca incluyen la contraseña. |
+| `repositoy` | Repositorios JPA para acceder a la base de datos. |
+| `service` | Lógica del negocio: validaciones, caché y logs. |
+| `controller` | Endpoints REST. |
+| `security` | Generación y validación de tokens JWT. |
+| `config` | Configuración de Spring Security. |
+| `exception` | Manejo de errores y códigos HTTP. |
 
 ---
 
-## 🌐 Endpoints de la API
+## 🌐 Endpoints
 
-La API organiza sus recursos mediante endpoints REST. Las rutas siguientes representan las operaciones CRUD previstas para cada recurso.
+### Inicio de sesión (público)
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `POST` | `/gimnasioAPI/auth/login` | Inicia sesión y devuelve un token JWT. Funciona para administradores, entrenadores y miembros. |
+
+Ejemplo:
+
+```json
+{ "correo": "ana@ejemplo.com", "contrasena": "clave1234" }
+```
+
+Respuesta:
+
+```json
+{ "token": "eyJhbGciOi...", "rol": "ENTRENADOR" }
+```
+
+Para los demás endpoints se debe enviar el token en la cabecera:
+
+```
+Authorization: Bearer <token>
+```
+
+### Administradores
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/gimnasioAPI/administrador` | Obtener todos los administradores. |
+| `GET` | `/gimnasioAPI/administrador/{id}` | Obtener un administrador por ID. |
+| `POST` | `/gimnasioAPI/administrador` | Registrar un administrador. |
+| `PUT` | `/gimnasioAPI/administrador/{id}` | Actualizar un administrador. |
+| `DELETE` | `/gimnasioAPI/administrador/{id}` | Eliminar un administrador. |
 
 ### Entrenadores
 
-| Método HTTP | Endpoint | Descripción |
+| Método | Endpoint | Descripción |
 |---|---|---|
-| `GET` | `/api/entrenadores` | Obtener todos los entrenadores. |
-| `GET` | `/api/entrenadores/{id}` | Obtener un entrenador por su ID. |
-| `POST` | `/api/entrenadores` | Registrar un entrenador. |
-| `PUT` | `/api/entrenadores/{id}` | Actualizar un entrenador. |
-| `DELETE` | `/api/entrenadores/{id}` | Eliminar un entrenador. |
+| `GET` | `/gimnasioAPI/entrenador` | Obtener todos los entrenadores. |
+| `GET` | `/gimnasioAPI/entrenador/{id}` | Obtener un entrenador por ID. |
+| `POST` | `/gimnasioAPI/entrenador` | Registrar un entrenador. |
+| `PUT` | `/gimnasioAPI/entrenador/{id}` | Actualizar un entrenador. |
+| `DELETE` | `/gimnasioAPI/entrenador/{id}` | Eliminar un entrenador. |
 
 ### Miembros
 
-| Método HTTP | Endpoint | Descripción |
+| Método | Endpoint | Descripción |
 |---|---|---|
-| `GET` | `/api/miembros` | Obtener todos los miembros. |
-| `GET` | `/api/miembros/{id}` | Obtener un miembro por su ID. |
-| `POST` | `/api/miembros` | Registrar un miembro. |
-| `PUT` | `/api/miembros/{id}` | Actualizar un miembro. |
-| `DELETE` | `/api/miembros/{id}` | Eliminar un miembro. |
-
-### Clases
-
-| Método HTTP | Endpoint | Descripción |
-|---|---|---|
-| `GET` | `/api/clases` | Obtener todas las clases. |
-| `GET` | `/api/clases/{id}` | Obtener una clase por su ID. |
-| `POST` | `/api/clases` | Crear una clase. |
-| `PUT` | `/api/clases/{id}` | Actualizar una clase. |
-| `DELETE` | `/api/clases/{id}` | Eliminar una clase. |
-
-### Inscripciones
-
-| Método HTTP | Endpoint | Descripción |
-|---|---|---|
-| `GET` | `/api/inscripciones` | Obtener todas las inscripciones. |
-| `GET` | `/api/inscripciones/{id}` | Obtener una inscripción por su ID. |
-| `POST` | `/api/inscripciones` | Registrar una inscripción. |
-| `PUT` | `/api/inscripciones/{id}` | Actualizar una inscripción. |
-| `DELETE` | `/api/inscripciones/{id}` | Cancelar o eliminar una inscripción. |
-
-### Asistencias
-
-| Método HTTP | Endpoint | Descripción |
-|---|---|---|
-| `GET` | `/api/asistencias` | Obtener todos los registros de asistencia. |
-| `GET` | `/api/asistencias/{id}` | Obtener una asistencia por su ID. |
-| `POST` | `/api/asistencias` | Registrar una asistencia. |
-| `PUT` | `/api/asistencias/{id}` | Actualizar un registro de asistencia. |
-| `DELETE` | `/api/asistencias/{id}` | Eliminar un registro de asistencia. |
+| `GET` | `/gimnasioAPI/miembros` | Obtener todos los miembros. |
+| `GET` | `/gimnasioAPI/miembros/{id}` | Obtener un miembro por ID. |
+| `POST` | `/gimnasioAPI/miembros` | Registrar un miembro (**público**, no necesita token). |
+| `PUT` | `/gimnasioAPI/miembros/{id}` | Actualizar un miembro. |
+| `DELETE` | `/gimnasioAPI/miembros/{id}` | Eliminar un miembro. |
 
 ---
 
 ## 📏 Reglas de negocio
 
-1. **Asignación de entrenador:** toda clase debe tener un entrenador válido asignado.
-2. **Capacidad máxima:** cada clase debe tener definido un cupo máximo de participantes.
-3. **Disponibilidad de cupos:** no se permiten inscripciones cuando la clase ha alcanzado su capacidad máxima.
-4. **Inscripciones únicas:** un miembro no puede inscribirse más de una vez en la misma clase.
-5. **Liberación de cupos:** al cancelar una inscripción, el lugar reservado vuelve a estar disponible.
-6. **Miembros registrados:** únicamente los miembros existentes pueden inscribirse en las clases.
-7. **Asistencia válida:** solo se puede registrar la asistencia de un miembro inscrito en la clase correspondiente.
-8. **Registro único de asistencia:** cada miembro debe tener como máximo un registro de asistencia por clase.
-9. **Integridad de referencias:** las operaciones deben validar que las entidades relacionadas existan.
-10. **Validación de horarios:** los traslapes deben validarse según las reglas definidas por el proyecto.
+1. El correo no se puede repetir entre usuarios del mismo tipo.
+2. Las contraseñas se guardan encriptadas con BCrypt.
+3. Las respuestas de la API nunca muestran la contraseña.
+4. Los entrenadores y miembros nuevos se registran con estado `ACTIVO`.
+5. Solo los usuarios con estado `ACTIVO` pueden iniciar sesión.
+6. Todos los endpoints, excepto el inicio de sesión y el registro de miembros, necesitan un token válido.
 
 ---
 
 ## 📨 Códigos de respuesta HTTP
 
-| Código | Nombre | Descripción |
+| Código | Nombre | Cuándo se devuelve |
 |:---:|---|---|
-| `200` | OK | Consulta o actualización realizada correctamente. |
-| `201` | Created | Recurso creado correctamente. |
-| `204` | No Content | Operación completada sin contenido de respuesta. |
-| `400` | Bad Request | Solicitud con datos inválidos o incompletos. |
-| `404` | Not Found | El recurso solicitado no existe. |
-| `409` | Conflict | La operación entra en conflicto con una regla de negocio. |
-| `500` | Internal Server Error | Error inesperado durante el procesamiento de la solicitud. |
+| `200` | OK | Consulta o actualización correcta. |
+| `201` | Created | Registro creado correctamente. |
+| `204` | No Content | Registro eliminado. |
+| `400` | Bad Request | Datos inválidos o incompletos. |
+| `401` | Unauthorized | No se envió token, el token no es válido o las credenciales son incorrectas. |
+| `404` | Not Found | El registro no existe. |
+| `409` | Conflict | El correo ya está registrado. |
+
+---
+
+## 📚 Temas de la Unidad 6 aplicados
+
+### Caché (`@Cacheable`)
+La consulta por ID (`GET /{id}`) se guarda en memoria. La primera vez se consulta la base de datos y las siguientes veces se responde desde el caché. Al actualizar o eliminar un registro se usa `@CacheEvict` para borrar el dato del caché y no devolver información desactualizada.
+
+**Cómo comprobarlo:** consultar dos veces el mismo ID y revisar la consola. La consulta SQL y el mensaje `Consultando ... en la base de datos` solo aparecen la primera vez.
+
+### Logs con SLF4J
+Los servicios usan `@Slf4j` para registrar eventos con distintos niveles:
+- `INFO`: registros creados, actualizados o eliminados.
+- `WARN`: correo repetido o intento de eliminar un registro que no existe.
+- `DEBUG`: consultas a la base de datos.
+
+Los logs se muestran en consola y también se guardan en `logs/gimnasio.log`.
+
+### Spring Security y JWT
+El usuario inicia sesión con su correo y contraseña, y la API devuelve un token firmado que dura 24 horas. Un filtro revisa el token en cada petición; si no es válido, la API responde `401`.
+
+### Pruebas y cobertura
+- **Prueba unitaria** (`EntrenadorServiceTest`): prueba el servicio con JUnit 5 y Mockito, sin base de datos.
+- **Prueba de integración** (`EntrenadorControllerIntegrationTest`): levanta toda la aplicación con `@SpringBootTest` y prueba los endpoints con MockMvc.
+- **JaCoCo**: genera el reporte de cobertura en `build/reports/jacoco/test/html/index.html`.
 
 ---
 
 ## 🚀 Instalación y ejecución
 
-### Requisitos previos
+### Requisitos
 
-- Java en una versión compatible con el proyecto.
+- Java 17 o superior.
+- PostgreSQL instalado y en ejecución.
 - Git.
-- Gradle o el Gradle Wrapper incluido en el repositorio.
 
 ### 1. Clonar el repositorio
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/rp21005-dev/API_Gimnasio.git
 cd API_Gimnasio
-````
-
-### 2. Compilar el proyecto
-
-Linux o macOS:
-
-bash
-```
-./gradlew build
 ```
 
-Windows:
+### 2. Crear la base de datos
 
-bat
-```
-gradlew.bat build
-```
-
-### 3. Ejecutar las pruebas
-
-Linux o macOS:
-
-bash
-```
-./gradlew test
+```bash
+createdb gimnasio
 ```
 
-Windows:
+Las tablas se crean automáticamente al ejecutar la aplicación.
 
-bat
+### 3. Crear el archivo `.env`
+
+Copiar el archivo de ejemplo y completar los datos:
+
+```bash
+cp .env.example .env
 ```
-gradlew.bat test
-```
+
+| Variable | Descripción |
+|---|---|
+| `DB_URL` | Dirección de la base de datos. |
+| `DB_USER` | Usuario de PostgreSQL. |
+| `DB_PASSWORD` | Contraseña de PostgreSQL. |
+| `JWT_SECRET` | Clave para firmar los tokens (mínimo 32 caracteres). Se puede generar con `openssl rand -base64 48`. |
+
+> El archivo `.env` no se sube al repositorio porque contiene contraseñas.
 
 ### 4. Ejecutar la aplicación
 
-Si el proyecto utiliza Spring Boot:
-
 Linux o macOS:
 
-bash
-```
+```bash
 ./gradlew bootRun
 ```
 
 Windows:
 
-bat
-```
+```bat
 gradlew.bat bootRun
 ```
 
-> Nota: si el proyecto no utiliza Spring Boot, ejecuta la tarea configurada en Gradle para iniciar la aplicación.
+La API queda disponible en `http://localhost:8080`.
 
-## 🧪 Pruebas y validación
+### 5. Ejecutar las pruebas
 
-- [ ]Crear y consultar entrenadores, miembros y clases.
-- [ ]Inscribir a un miembro en una clase con cupos disponibles.
-- [ ]Rechazar una inscripción cuando la clase está llena.
-- [ ]Impedir inscripciones duplicadas.
-- [ ]Liberar un cupo después de cancelar una inscripción.
-- [ ]Registrar asistencia únicamente para miembros inscritos.
-- [ ]Impedir registros de asistencia duplicados.
-- [ ]Validar los códigos HTTP de las solicitudes exitosas y fallidas.
+```bash
+./gradlew test
+```
 
-## 📌 Consideraciones
+> Las pruebas de integración usan la base de datos local, así que PostgreSQL debe estar en ejecución. Los datos de prueba se eliminan automáticamente al terminar.
 
-- Mantener los endpoints documentados sincronizados con los controladores.
-- Realizar las validaciones de negocio en la API.
-- Proteger las relaciones entre entidades al actualizar o eliminar registros.
-- Actualizar esta documentación cuando se incorporen nuevas funcionalidades.
+---
 
 ## 📄 Licencia
 

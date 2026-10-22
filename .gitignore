@@ -5,10 +5,12 @@ build/
 # Variables de entorno locales (credenciales)
 .env
 
-# IntelliJ (archivos personales)
-.idea/workspace.xml
 out/
 
 # Logs
 logs/
 *.log
+
+# IntelliJ IDEA
+.idea/
+*.iml

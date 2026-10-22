@@ -40,8 +40,13 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
 
-    // Seguridad para contraseñas
-    implementation("org.springframework.security:spring-security-crypto")
+    // Seguridad: Spring Security (incluye BCrypt para contraseñas)
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // Librería JJWT para generar y validar tokens
+    implementation("io.jsonwebtoken:jjwt-api:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
 
 }
 

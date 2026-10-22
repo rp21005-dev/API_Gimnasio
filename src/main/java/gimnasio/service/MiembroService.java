@@ -5,6 +5,7 @@ import gimnasio.repositoy.MiembroRepositoy;
 import gimnasio.exception.ConflictException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+@Slf4j // Lombok crea el logger: private static final Logger log
 @Service
 @RequiredArgsConstructor
 public class MiembroService {
@@ -27,6 +29,7 @@ public class MiembroService {
     @Transactional
     public MiembroResponseDTO crearMiembro(MiembroRequestDTO dto){
         if (miembroRepositoy.findByCorreo(dto.getCorreo()).isPresent()){
+            log.warn("Intento de registrar un miembro con un correo ya existente");
             throw new ConflictException("El correo ya existe.");
         }
         Miembro miembro = new Miembro();
@@ -39,7 +42,9 @@ public class MiembroService {
         miembro.setContrasenaHash(passwordEncoder.encode(dto.getContrasenaHash()));
         miembro.setFechaRegistro(LocalDate.now());
         miembro.setEstado("ACTIVO");
-        return toResponse(miembroRepositoy.save(miembro));
+        Miembro guardado = miembroRepositoy.save(miembro);
+        log.info("Miembro creado con id {}", guardado.getId());
+        return toResponse(guardado);
     }
 
     // Metodo solo para devolver solo algunos atributos y no todos como la contraseña
@@ -69,6 +74,8 @@ public class MiembroService {
     @Cacheable(value = "miembros", key = "#id")
     @Transactional(readOnly = true)
     public MiembroResponseDTO obtenerPorId(Long id) {
+        // Este mensaje solo aparece cuando el dato NO está en caché
+        log.debug("Consultando miembro con id {} en la base de datos", id);
         return toResponse(buscar(id));
     }
 
@@ -88,6 +95,7 @@ public class MiembroService {
         if (miembroRepositoy.existsByCorreoAndIdNot(
                 dto.getCorreo(), id)) {
 
+            log.warn("No se pudo actualizar el miembro con id {}: correo repetido", id);
             throw new ConflictException(
                     "El correo ya está registrado en otra cuenta");
         }
@@ -104,6 +112,7 @@ public class MiembroService {
         }
 
 
+        log.info("Miembro con id {} actualizado", id);
         return toResponse(miembroRepositoy.save(miembro));
     }
 
@@ -112,9 +121,11 @@ public class MiembroService {
     @Transactional
     public void eliminarMiembro(Long id) {
         if (!miembroRepositoy.existsById(id)) {
+            log.warn("Se intentó eliminar un miembro inexistente con id {}", id);
             throw new NoSuchElementException("El miembro no existe.");
         }
         miembroRepositoy.deleteById(id);
+        log.info("Miembro con id {} eliminado", id);
     }
 
 

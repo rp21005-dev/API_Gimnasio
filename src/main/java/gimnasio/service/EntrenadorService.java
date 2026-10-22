@@ -5,6 +5,7 @@ import gimnasio.repositoy.EntrenadorRepository;
 import gimnasio.exception.ConflictException;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.NoSuchElementException;
 
 
+@Slf4j // Lombok crea el logger: private static final Logger log
 @Service
 @RequiredArgsConstructor
 public class EntrenadorService {
@@ -27,6 +29,7 @@ public class EntrenadorService {
     @Transactional
     public EntrenadorResponseDTO crearEntrenador(EntrenadorRequestDTO dto){
         if (entrenadorRepository.findByCorreo(dto.getCorreo()).isPresent()){
+            log.warn("Intento de registrar un entrenador con un correo ya existente");
             throw new ConflictException("El correo ya existe.");
         }
         Entrenador entrenador = new Entrenador();
@@ -37,7 +40,9 @@ public class EntrenadorService {
         entrenador.setEspecialidad(dto.getEspecialidad());
         entrenador.setContrasenaHash(passwordEncoder.encode(dto.getContrasenaHash()));
         entrenador.setEstado("ACTIVO");
-        return toResponse(entrenadorRepository.save(entrenador));
+        Entrenador guardado = entrenadorRepository.save(entrenador);
+        log.info("Entrenador creado con id {}", guardado.getId());
+        return toResponse(guardado);
 
     }
     // Metodo solo para devolver solo algunos atributos y no todos como la contraseña
@@ -65,6 +70,8 @@ public class EntrenadorService {
     @Cacheable(value = "entrenadores", key = "#id")
     @Transactional(readOnly = true)
     public EntrenadorResponseDTO obtenerPorId(Long id) {
+        // Este mensaje solo aparece cuando el dato NO está en caché
+        log.debug("Consultando entrenador con id {} en la base de datos", id);
         return toResponse(buscar(id));
     }
 
@@ -84,6 +91,7 @@ public class EntrenadorService {
         if (entrenadorRepository.existsByCorreoAndIdNot(
                 dto.getCorreo(), id)) {
 
+            log.warn("No se pudo actualizar el entrenador con id {}: correo repetido", id);
             throw new ConflictException(
                     "El correo ya está registrado en otra cuenta");
         }
@@ -95,6 +103,7 @@ public class EntrenadorService {
         entrenador.setEspecialidad(dto.getEspecialidad());
         entrenador.setEstado(dto.getEstado());
 
+        log.info("Entrenador con id {} actualizado", id);
         return toResponse(entrenadorRepository.save(entrenador));
     }
 
@@ -103,9 +112,11 @@ public class EntrenadorService {
     @Transactional
     public void eliminarEntrenador(Long id) {
         if (!entrenadorRepository.existsById(id)) {
+            log.warn("Se intentó eliminar un entrenador inexistente con id {}", id);
             throw new NoSuchElementException("El entrenador no existe.");
         }
         entrenadorRepository.deleteById(id);
+        log.info("Entrenador con id {} eliminado", id);
     }
 
 

@@ -2,7 +2,6 @@ package gimnasio.controller;
 import gimnasio.dto.EntrenadorRequestDTO;
 import gimnasio.dto.EntrenadorResponseDTO;
 import gimnasio.dto.EntrenadorUpdateDTO;
-import gimnasio.model.Entrenador;
 import gimnasio.service.EntrenadorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,9 +27,14 @@ public class EntrenadorController {
 
     //Obtener todos los entrenadores
     @GetMapping()
-    public List<Entrenador> obtenerTodosLosEntrenadores(){
-
+    public List<EntrenadorResponseDTO> obtenerTodosLosEntrenadores(){
         return entrenadorService.listarEntrenador();
+    }
+
+    //Obtener un entrenador por id
+    @GetMapping("/{id}")
+    public EntrenadorResponseDTO obtenerPorId(@PathVariable Long id){
+        return entrenadorService.obtenerPorId(id);
     }
 
     //Actualizar

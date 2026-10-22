@@ -1,11 +1,14 @@
 package gimnasio.model;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import lombok.*;
 
 @Data
-@Getter
-@Setter// Getters/Setter
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor //Constructor vacio
 @AllArgsConstructor // Contructo con los argumentos
+@Entity
+@Table(name = "entrenadores")
 public class Entrenador extends Usuario{
     private String nombres;
     private String apellidos;
@@ -17,5 +20,3 @@ public class Entrenador extends Usuario{
         return  this.nombres + " " + this.apellidos;
     }
 }
-
-

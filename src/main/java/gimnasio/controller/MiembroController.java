@@ -2,7 +2,6 @@ package gimnasio.controller;
 import gimnasio.dto.MiembroUpdateDTO;
 import gimnasio.dto.MiembroResponseDTO;
 import gimnasio.dto.MiembroRequestDTO;
-import gimnasio.model.Miembro;
 import gimnasio.service.MiembroService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,8 +27,14 @@ public class MiembroController {
 
     //Obtener todos los miembros
     @GetMapping()
-    public List<Miembro> obtenerTodosLosMiembros(){
+    public List<MiembroResponseDTO> obtenerTodosLosMiembros(){
         return miembrosService.listarMiembro();
+    }
+
+    //Obtener un miembro por id
+    @GetMapping("/{id}")
+    public MiembroResponseDTO obtenerPorId(@PathVariable Long id){
+        return miembrosService.obtenerPorId(id);
     }
 
     @PutMapping("/{id}")

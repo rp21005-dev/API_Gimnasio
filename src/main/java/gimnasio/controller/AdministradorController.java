@@ -3,13 +3,11 @@ import gimnasio.dto.AdministradorRequestDTO;
 import gimnasio.dto.AdministradorResponseDTO;
 import gimnasio.dto.AdministradorUpdateDTO;
 
-import gimnasio.model.Administrador;
 import gimnasio.service.AdministradorService;
 
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -23,22 +21,27 @@ public class AdministradorController {
 
     private final AdministradorService administradorService;
 
-    //Agregar Entrenador
+    //Agregar Administrador
     @PostMapping
-    public ResponseEntity<Administrador>crearAdministrador(@Valid @RequestBody AdministradorRequestDTO administradorDTO){
-        Administrador nuevoAdministrador = administradorService.crearAdministrador(administradorDTO);
-        return ResponseEntity.status(201).body(nuevoAdministrador);
+    public ResponseEntity<AdministradorResponseDTO>crearAdministrador(@Valid @RequestBody AdministradorRequestDTO administradorDTO){
+        return ResponseEntity.status(201).body(administradorService.crearAdministrador(administradorDTO));
     }
 
     //Obtener todos los administradores
     @GetMapping()
-    public List<Administrador> obtenerTodosLosAdministradores(){
+    public List<AdministradorResponseDTO> obtenerTodosLosAdministradores(){
         return administradorService.listarAdministradores();
+    }
+
+    //Obtener un administrador por id
+    @GetMapping("/{id}")
+    public AdministradorResponseDTO obtenerPorId(@PathVariable Long id){
+        return administradorService.obtenerPorId(id);
     }
 
     //Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<AdministradorResponseDTO> actualizar(@Valid @PathVariable Long id, @Valid @RequestBody AdministradorUpdateDTO dto) {
+    public ResponseEntity<AdministradorResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody AdministradorUpdateDTO dto) {
         return ResponseEntity.ok(administradorService.actualizar(id, dto));
     }
 

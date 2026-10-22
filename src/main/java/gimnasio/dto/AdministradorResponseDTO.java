@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 
 public class AdministradorResponseDTO {
+    private Long id;
     private String correo;
     private String estado;
 }

@@ -11,20 +11,21 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 
 
 @Service
 @RequiredArgsConstructor
 public class EntrenadorService {
 
-    private EntrenadorRepository entrenadorRepository;
+    private final EntrenadorRepository entrenadorRepository;
     private final PasswordEncoder passwordEncoder;
 
 
     @Transactional
     public EntrenadorResponseDTO crearEntrenador(EntrenadorRequestDTO dto){
         if (entrenadorRepository.findByCorreo(dto.getCorreo()).isPresent()){
-            throw new IllegalStateException("El correo ya existe ya existe.");
+            throw new ConflictException("El correo ya existe.");
         }
         Entrenador entrenador = new Entrenador();
         entrenador.setNombres(dto.getNombres());
@@ -53,13 +54,19 @@ public class EntrenadorService {
 
     //Listar los entrenadores
     @Transactional(readOnly = true)
-    public List<Entrenador> listarEntrenador() {
-        return entrenadorRepository.findAll();
+    public List<EntrenadorResponseDTO> listarEntrenador() {
+        return entrenadorRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+    // Obtener un entrenador por id
+    @Transactional(readOnly = true)
+    public EntrenadorResponseDTO obtenerPorId(Long id) {
+        return toResponse(buscar(id));
     }
 
 
     private Entrenador buscar(Long id) {
-        return entrenadorRepository.findById(id).orElseThrow(() -> new IllegalStateException("Entrenador no encontrado con id " + id));
+        return entrenadorRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Entrenador no encontrado con id " + id));
     }
 
 
@@ -82,18 +89,14 @@ public class EntrenadorService {
         entrenador.setEspecialidad(dto.getEspecialidad());
         entrenador.setEstado(dto.getEstado());
 
-        Entrenador actualizado = entrenadorRepository.save(entrenador);
-        return EntrenadorResponseDTO.builder()
-                .correo(actualizado.getCorreo())
-                .estado(actualizado.getEstado())
-                .build();
+        return toResponse(entrenadorRepository.save(entrenador));
     }
 
     // Eliminar un entrenador por ID
     @Transactional
     public void eliminarEntrenador(Long id) {
         if (!entrenadorRepository.existsById(id)) {
-            throw new IllegalStateException("El administrador no existe.");
+            throw new NoSuchElementException("El entrenador no existe.");
         }
         entrenadorRepository.deleteById(id);
     }

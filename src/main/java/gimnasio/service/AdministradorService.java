@@ -7,48 +7,66 @@ import gimnasio.dto.AdministradorRequestDTO;
 import gimnasio.exception.ConflictException;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
 public class AdministradorService {
 
-    private AdministradorRepository administradorRepository;
+    private final AdministradorRepository administradorRepository;
+    private final PasswordEncoder passwordEncoder;
 
     // Metodo para guardar administrador
     @Transactional
-    public Administrador crearAdministrador(AdministradorRequestDTO dto){
+    public AdministradorResponseDTO crearAdministrador(AdministradorRequestDTO dto){
         if (administradorRepository.findByCorreo(dto.getCorreo()).isPresent()){
-            throw new IllegalStateException("El correo ya existe ya existe.");
+            throw new ConflictException("El correo ya existe.");
         }
         Administrador administrador = new Administrador();
         administrador.setCorreo(dto.getCorreo());
-        administrador.setCorreo(dto.getContrasenaHash());
-        administrador.setCorreo(dto.getEstado());
+        administrador.setContrasenaHash(passwordEncoder.encode(dto.getContrasenaHash()));
+        administrador.setEstado(dto.getEstado());
 
-        return administradorRepository.save(administrador);
+        return toResponse(administradorRepository.save(administrador));
+    }
+
+    // Metodo solo para devolver solo algunos atributos y no todos como la contraseña
+    private AdministradorResponseDTO toResponse(Administrador administrador){
+        return AdministradorResponseDTO.builder()
+                .id(administrador.getId())
+                .correo(administrador.getCorreo())
+                .estado(administrador.getEstado())
+                .build();
     }
 
     // Metodo para listar todos los administradores
     @Transactional(readOnly = true)
-    public List<Administrador> listarAdministradores() {
-        return administradorRepository.findAll();
+    public List<AdministradorResponseDTO> listarAdministradores() {
+        return administradorRepository.findAll().stream().map(this::toResponse).toList();
+    }
+
+    // Obtener un administrador por id
+    @Transactional(readOnly = true)
+    public AdministradorResponseDTO obtenerPorId(Long id) {
+        return toResponse(buscar(id));
     }
 
     ///Elimnar un administrador
     @Transactional
     public void eliminarAdministrador(Long id) {
         if (!administradorRepository.existsById(id)) {
-            throw new IllegalStateException("El administrador no existe.");
+            throw new NoSuchElementException("El administrador no existe.");
         }
         administradorRepository.deleteById(id);
     }
 
     //Buscar por id
     private Administrador buscar(Long id) {
-            return administradorRepository.findById(id).orElseThrow(() -> new IllegalStateException("Administrador no encontrado con id " + id));
+            return administradorRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Administrador no encontrado con id " + id));
     }
 
 
@@ -69,14 +87,8 @@ public class AdministradorService {
         administrador.setCorreo(dto.getCorreo());
         administrador.setEstado(dto.getEstado());
 
-        Administrador actualizado = administradorRepository.save(administrador);
-        return AdministradorResponseDTO.builder()
-                .correo(actualizado.getCorreo())
-                .estado(actualizado.getEstado())
-                .build();
+        return toResponse(administradorRepository.save(administrador));
     }
 
 
 }
-
-

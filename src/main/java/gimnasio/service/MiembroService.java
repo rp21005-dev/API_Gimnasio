@@ -10,20 +10,22 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.NoSuchElementException;
 
 @Service
 @RequiredArgsConstructor
 public class MiembroService {
 
-    private MiembroRepositoy miembroRepositoy;
+    private final MiembroRepositoy miembroRepositoy;
     private final PasswordEncoder passwordEncoder;
 
 
     @Transactional
     public MiembroResponseDTO crearMiembro(MiembroRequestDTO dto){
         if (miembroRepositoy.findByCorreo(dto.getCorreo()).isPresent()){
-            throw new IllegalStateException("El correo ya existe ya existe.");
+            throw new ConflictException("El correo ya existe.");
         }
         Miembro miembro = new Miembro();
         miembro.setNombres(dto.getNombres());
@@ -33,6 +35,8 @@ public class MiembroService {
         miembro.setTelefono(dto.getTelefono());
         miembro.setFechaNacimiento(dto.getFechaNacimiento());
         miembro.setContrasenaHash(passwordEncoder.encode(dto.getContrasenaHash()));
+        miembro.setFechaRegistro(LocalDate.now());
+        miembro.setEstado("ACTIVO");
         return toResponse(miembroRepositoy.save(miembro));
     }
 
@@ -46,19 +50,27 @@ public class MiembroService {
                 .correo(miembro.getCorreo())
                 .telefono(miembro.getTelefono())
                 .fechaNacimiento(miembro.getFechaNacimiento())
+                .fechaRegistro(miembro.getFechaRegistro())
+                .estado(miembro.getEstado())
                 .build();
     }
 
 
-    //Listar los entrenadores
+    //Listar los miembros
     @Transactional(readOnly = true)
-    public List<Miembro> listarMiembro() {
-        return miembroRepositoy.findAll();
+    public List<MiembroResponseDTO> listarMiembro() {
+        return miembroRepositoy.findAll().stream().map(this::toResponse).toList();
+    }
+
+    // Obtener un miembro por id
+    @Transactional(readOnly = true)
+    public MiembroResponseDTO obtenerPorId(Long id) {
+        return toResponse(buscar(id));
     }
 
 
     private Miembro buscar(Long id) {
-        return miembroRepositoy.findById(id).orElseThrow(() -> new IllegalStateException("Miembro no encontrado con id " + id));
+        return miembroRepositoy.findById(id).orElseThrow(() -> new NoSuchElementException("Miembro no encontrado con id " + id));
     }
 
 
@@ -93,7 +105,7 @@ public class MiembroService {
     @Transactional
     public void eliminarMiembro(Long id) {
         if (!miembroRepositoy.existsById(id)) {
-            throw new IllegalStateException("El miembro no existe.");
+            throw new NoSuchElementException("El miembro no existe.");
         }
         miembroRepositoy.deleteById(id);
     }

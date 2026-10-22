@@ -2,6 +2,7 @@ plugins {
     java
     id("org.springframework.boot") version "4.1.1"
     id("io.spring.dependency-management") version "1.1.7"
+    jacoco // Cobertura de código
 }
 
 group = "gimnnasio"
@@ -35,6 +36,8 @@ dependencies {
 
     // Pruebas automatizadas
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test") // MockMvc
+    testImplementation("org.springframework.boot:spring-boot-starter-security-test") // @WithMockUser
 
     //Lombok
     compileOnly("org.projectlombok:lombok")
@@ -52,4 +55,13 @@ dependencies {
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport) // Genera el reporte después de ejecutar las pruebas
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required = true
+        html.required = true // Reporte en build/reports/jacoco/test/html/index.html
+    }
 }

@@ -24,6 +24,9 @@ dependencies {
     // Persistencia con JPA
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
+    // Caché en memoria
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+
     // Validación de datos
     implementation("org.springframework.boot:spring-boot-starter-validation")
 

@@ -5,6 +5,8 @@ import gimnasio.repositoy.EntrenadorRepository;
 import gimnasio.exception.ConflictException;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,6 +61,8 @@ public class EntrenadorService {
     }
 
     // Obtener un entrenador por id
+    // La primera vez consulta la BD; las siguientes con el mismo id se leen de memoria
+    @Cacheable(value = "entrenadores", key = "#id")
     @Transactional(readOnly = true)
     public EntrenadorResponseDTO obtenerPorId(Long id) {
         return toResponse(buscar(id));
@@ -70,6 +74,8 @@ public class EntrenadorService {
     }
 
 
+    // Al actualizar se borra del caché para no devolver datos desactualizados
+    @CacheEvict(value = "entrenadores", key = "#id")
     @Transactional
     public EntrenadorResponseDTO actualizar(Long id, EntrenadorUpdateDTO dto) {
 
@@ -93,6 +99,7 @@ public class EntrenadorService {
     }
 
     // Eliminar un entrenador por ID
+    @CacheEvict(value = "entrenadores", key = "#id")
     @Transactional
     public void eliminarEntrenador(Long id) {
         if (!entrenadorRepository.existsById(id)) {

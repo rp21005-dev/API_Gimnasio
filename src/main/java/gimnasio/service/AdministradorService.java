@@ -8,6 +8,8 @@ import gimnasio.exception.ConflictException;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
@@ -50,12 +52,15 @@ public class AdministradorService {
     }
 
     // Obtener un administrador por id
+    // La primera vez consulta la BD; las siguientes con el mismo id se leen de memoria
+    @Cacheable(value = "administradores", key = "#id")
     @Transactional(readOnly = true)
     public AdministradorResponseDTO obtenerPorId(Long id) {
         return toResponse(buscar(id));
     }
 
     ///Elimnar un administrador
+    @CacheEvict(value = "administradores", key = "#id")
     @Transactional
     public void eliminarAdministrador(Long id) {
         if (!administradorRepository.existsById(id)) {
@@ -72,6 +77,8 @@ public class AdministradorService {
 
 
     // Actualizar
+    // Al actualizar se borra del caché para no devolver datos desactualizados
+    @CacheEvict(value = "administradores", key = "#id")
     @Transactional
     public AdministradorResponseDTO actualizar(Long id, AdministradorUpdateDTO dto) {
 

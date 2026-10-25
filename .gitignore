@@ -1,0 +1,16 @@
+# Gradle
+.gradle/
+build/
+
+# Variables de entorno locales (credenciales)
+.env
+
+out/
+
+# Logs
+logs/
+*.log
+
+# IntelliJ IDEA
+.idea/
+*.iml

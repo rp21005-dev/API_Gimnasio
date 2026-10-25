@@ -1,7 +1,8 @@
 plugins {
     java
-    id("org.springframework.boot") version "3.5.6"
+    id("org.springframework.boot") version "4.1.1"
     id("io.spring.dependency-management") version "1.1.7"
+    jacoco // Cobertura de código
 }
 
 group = "gimnnasio"
@@ -24,6 +25,9 @@ dependencies {
     // Persistencia con JPA
     implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 
+    // Caché en memoria
+    implementation("org.springframework.boot:spring-boot-starter-cache")
+
     // Validación de datos
     implementation("org.springframework.boot:spring-boot-starter-validation")
 
@@ -32,8 +36,32 @@ dependencies {
 
     // Pruebas automatizadas
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test") // MockMvc
+    testImplementation("org.springframework.boot:spring-boot-starter-security-test") // @WithMockUser
+
+    //Lombok
+    compileOnly("org.projectlombok:lombok")
+    annotationProcessor("org.projectlombok:lombok")
+
+    // Seguridad: Spring Security (incluye BCrypt para contraseñas)
+    implementation("org.springframework.boot:spring-boot-starter-security")
+
+    // Librería JJWT para generar y validar tokens
+    implementation("io.jsonwebtoken:jjwt-api:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
+
 }
 
 tasks.test {
     useJUnitPlatform()
+    finalizedBy(tasks.jacocoTestReport) // Genera el reporte después de ejecutar las pruebas
+}
+
+tasks.jacocoTestReport {
+    dependsOn(tasks.test)
+    reports {
+        xml.required = true
+        html.required = true // Reporte en build/reports/jacoco/test/html/index.html
+    }
 }

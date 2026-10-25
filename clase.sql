@@ -1,0 +1,10 @@
+CREATE TABLE clase (
+    id_clase SERIAL PRIMARY KEY,
+    id_categoria INT NOT NULL,
+    id_sala INT NOT NULL,
+    id_entrenador INT NOT NULL,
+    descripcion VARCHAR(255),
+    cupo_maximo INT NOT NULL,
+    tipo VARCHAR(20) CHECK (tipo IN ('Principiante', 'Intermedio', 'Avanzado')),
+    activo VARCHAR(10) CHECK (activo IN ('activa', 'cancelada')) DEFAULT 'activa'
+);

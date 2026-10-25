@@ -108,5 +108,4 @@ public class AdministradorService {
         return toResponse(administradorRepository.save(administrador));
     }
 
-
 }

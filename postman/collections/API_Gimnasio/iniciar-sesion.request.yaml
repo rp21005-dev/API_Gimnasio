@@ -1,0 +1,24 @@
+$kind: http-request
+name: Iniciar sesión
+description: Usa el administrador de demostración y guarda el token en la colección.
+url: "{{baseUrl}}/auth/login"
+method: POST
+auth:
+  type: noauth
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |
+    {
+      "correo": "admin@gimnasio.com",
+      "contrasena": "clave1234"
+    }
+scripts:
+  - type: afterResponse
+    language: text/javascript
+    code: |
+      pm.test("Inicio de sesión correcto", () => pm.response.to.have.status(200));
+      pm.collectionVariables.set("token", pm.response.json().token);
+order: 1000

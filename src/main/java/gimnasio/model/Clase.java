@@ -15,7 +15,7 @@ public class Clase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Long id;
 
     private String tipoClase;
 
@@ -30,21 +30,4 @@ public class Clase {
     private int cupoMaximo;
     private String descripcion;
     private String estado;
-
-    // --- Métodos de negocio según el diagrama UML ---
-
-    public boolean validarTraslape(Entrenador entrenador, Object sala) {
-        // TODO: Implementar la lógica para verificar si se empalma con el horario del entrenador o la sala
-        return false;
-    }
-
-    public int obtenerCupoDisponible() {
-        // TODO: Implementar la lógica (por ejemplo: cupoMaximo - totalReservas)
-        return this.cupoMaximo;
-    }
-
-    public void cerrar() {
-        // TODO: Lógica para cambiar el estado a cerrado
-        this.estado = "CERRADA";
-    }
 }

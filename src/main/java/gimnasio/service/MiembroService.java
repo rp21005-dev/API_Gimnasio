@@ -1,7 +1,8 @@
 package gimnasio.service;
 import gimnasio.dto.*;
 import gimnasio.model.Miembro;
-import gimnasio.repositoy.MiembroRepositoy;
+import gimnasio.repository.UsuarioRepository;
+import gimnasio.repository.MiembroRepository;
 import gimnasio.exception.ConflictException;
 
 import lombok.RequiredArgsConstructor;
@@ -22,13 +23,14 @@ import java.util.NoSuchElementException;
 @RequiredArgsConstructor
 public class MiembroService {
 
-    private final MiembroRepositoy miembroRepositoy;
+    private final MiembroRepository miembroRepository;
+    private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
 
     @Transactional
     public MiembroResponseDTO crearMiembro(MiembroRequestDTO dto){
-        if (miembroRepositoy.findByCorreo(dto.getCorreo()).isPresent()){
+        if (usuarioRepository.existsByCorreo(dto.getCorreo())){
             log.warn("Intento de registrar un miembro con un correo ya existente");
             throw new ConflictException("El correo ya existe.");
         }
@@ -42,7 +44,7 @@ public class MiembroService {
         miembro.setContrasenaHash(passwordEncoder.encode(dto.getContrasenaHash()));
         miembro.setFechaRegistro(LocalDate.now());
         miembro.setEstado("ACTIVO");
-        Miembro guardado = miembroRepositoy.save(miembro);
+        Miembro guardado = miembroRepository.save(miembro);
         log.info("Miembro creado con id {}", guardado.getId());
         return toResponse(guardado);
     }
@@ -66,7 +68,7 @@ public class MiembroService {
     //Listar los miembros
     @Transactional(readOnly = true)
     public List<MiembroResponseDTO> listarMiembro() {
-        return miembroRepositoy.findAll().stream().map(this::toResponse).toList();
+        return miembroRepository.findAll().stream().map(this::toResponse).toList();
     }
 
     // Obtener un miembro por id
@@ -81,7 +83,7 @@ public class MiembroService {
 
 
     private Miembro buscar(Long id) {
-        return miembroRepositoy.findById(id).orElseThrow(() -> new NoSuchElementException("Miembro no encontrado con id " + id));
+        return miembroRepository.findById(id).orElseThrow(() -> new NoSuchElementException("Miembro no encontrado con id " + id));
     }
 
 
@@ -92,7 +94,7 @@ public class MiembroService {
 
         Miembro miembro = buscar(id);
 
-        if (miembroRepositoy.existsByCorreoAndIdNot(
+        if (usuarioRepository.existsByCorreoAndIdNot(
                 dto.getCorreo(), id)) {
 
             log.warn("No se pudo actualizar el miembro con id {}: correo repetido", id);
@@ -113,18 +115,18 @@ public class MiembroService {
 
 
         log.info("Miembro con id {} actualizado", id);
-        return toResponse(miembroRepositoy.save(miembro));
+        return toResponse(miembroRepository.save(miembro));
     }
 
     // Eliminar un miembro
     @CacheEvict(value = "miembros", key = "#id")
     @Transactional
     public void eliminarMiembro(Long id) {
-        if (!miembroRepositoy.existsById(id)) {
+        if (!miembroRepository.existsById(id)) {
             log.warn("Se intentó eliminar un miembro inexistente con id {}", id);
             throw new NoSuchElementException("El miembro no existe.");
         }
-        miembroRepositoy.deleteById(id);
+        miembroRepository.deleteById(id);
         log.info("Miembro con id {} eliminado", id);
     }
 

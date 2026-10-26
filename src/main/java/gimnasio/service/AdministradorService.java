@@ -2,7 +2,8 @@ package gimnasio.service;
 import gimnasio.dto.AdministradorResponseDTO;
 import gimnasio.dto.AdministradorUpdateDTO;
 import gimnasio.model.Administrador;
-import gimnasio.repositoy.AdministradorRepository;
+import gimnasio.repository.UsuarioRepository;
+import gimnasio.repository.AdministradorRepository;
 import gimnasio.dto.AdministradorRequestDTO;
 import gimnasio.exception.ConflictException;
 
@@ -22,12 +23,13 @@ import java.util.NoSuchElementException;
 public class AdministradorService {
 
     private final AdministradorRepository administradorRepository;
+    private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
     // Metodo para guardar administrador
     @Transactional
     public AdministradorResponseDTO crearAdministrador(AdministradorRequestDTO dto){
-        if (administradorRepository.findByCorreo(dto.getCorreo()).isPresent()){
+        if (usuarioRepository.existsByCorreo(dto.getCorreo())){
             log.warn("Intento de registrar un administrador con un correo ya existente");
             throw new ConflictException("El correo ya existe.");
         }
@@ -93,7 +95,7 @@ public class AdministradorService {
 
         Administrador administrador = buscar(id);
 
-        if (administradorRepository.existsByCorreoAndIdNot(
+        if (usuarioRepository.existsByCorreoAndIdNot(
                 dto.getCorreo(), id)) {
 
             log.warn("No se pudo actualizar el administrador con id {}: correo repetido", id);

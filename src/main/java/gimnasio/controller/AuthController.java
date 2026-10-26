@@ -1,9 +1,9 @@
 package gimnasio.controller;
 import gimnasio.dto.LoginRequestDTO;
 import gimnasio.model.Usuario;
-import gimnasio.repositoy.AdministradorRepository;
-import gimnasio.repositoy.EntrenadorRepository;
-import gimnasio.repositoy.MiembroRepositoy;
+import gimnasio.repository.AdministradorRepository;
+import gimnasio.repository.EntrenadorRepository;
+import gimnasio.repository.MiembroRepository;
 import gimnasio.security.JwtUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +24,7 @@ public class AuthController {
 
     private final AdministradorRepository administradorRepository;
     private final EntrenadorRepository entrenadorRepository;
-    private final MiembroRepositoy miembroRepositoy;
+    private final MiembroRepository miembroRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtils jwtUtils;
 
@@ -44,7 +44,7 @@ public class AuthController {
     private String buscarRol(LoginRequestDTO dto) {
         if (credencialesValidas(administradorRepository.findByCorreo(dto.getCorreo()), dto)) return "ADMINISTRADOR";
         if (credencialesValidas(entrenadorRepository.findByCorreo(dto.getCorreo()), dto)) return "ENTRENADOR";
-        if (credencialesValidas(miembroRepositoy.findByCorreo(dto.getCorreo()), dto)) return "MIEMBRO";
+        if (credencialesValidas(miembroRepository.findByCorreo(dto.getCorreo()), dto)) return "MIEMBRO";
         return null;
     }
 

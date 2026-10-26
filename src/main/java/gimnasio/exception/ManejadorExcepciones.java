@@ -1,5 +1,7 @@
 package gimnasio.exception;
 
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +13,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 
 // Convierte las excepciones en respuestas HTTP con el codigo correcto
+@Slf4j
 @RestControllerAdvice
 public class ManejadorExcepciones {
 
@@ -24,6 +27,13 @@ public class ManejadorExcepciones {
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<Map<String, String>> conflicto(ConflictException e) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+    }
+
+    // 409: el correo ya pertenece a otro usuario (administrador, entrenador o miembro)
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<Map<String, String>> correoRepetido(DataIntegrityViolationException e) {
+        log.warn("Intento de registrar un usuario con un correo que ya pertenece a otra cuenta");
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", "El correo ya está registrado en otra cuenta"));
     }
 
     // 400: datos invalidos segun las anotaciones de validacion de los DTO

@@ -4,7 +4,8 @@ import gimnasio.dto.EntrenadorRequestDTO;
 import gimnasio.dto.EntrenadorResponseDTO;
 import gimnasio.exception.ConflictException;
 import gimnasio.model.Entrenador;
-import gimnasio.repositoy.EntrenadorRepository;
+import gimnasio.repository.EntrenadorRepository;
+import gimnasio.repository.UsuarioRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,9 @@ class EntrenadorServiceTest {
 
     @Mock
     private EntrenadorRepository entrenadorRepository;
+
+    @Mock
+    private UsuarioRepository usuarioRepository;
 
     @Mock
     private PasswordEncoder passwordEncoder;
@@ -73,7 +77,7 @@ class EntrenadorServiceTest {
     @Test
     @DisplayName("Debe guardar la contraseña encriptada al crear un entrenador")
     void crearEntrenador_Exito() {
-        when(entrenadorRepository.findByCorreo("ana@ejemplo.com")).thenReturn(Optional.empty());
+        when(usuarioRepository.existsByCorreo("ana@ejemplo.com")).thenReturn(false);
         when(passwordEncoder.encode("clave1234")).thenReturn("hash-simulado");
         when(entrenadorRepository.save(any(Entrenador.class))).thenAnswer(invocacion -> invocacion.getArgument(0));
 
@@ -86,7 +90,7 @@ class EntrenadorServiceTest {
     @Test
     @DisplayName("Debe lanzar ConflictException si el correo ya existe")
     void crearEntrenador_CorreoRepetido() {
-        when(entrenadorRepository.findByCorreo("ana@ejemplo.com")).thenReturn(Optional.of(entrenador));
+        when(usuarioRepository.existsByCorreo("ana@ejemplo.com")).thenReturn(true);
 
         assertThrows(ConflictException.class, () -> entrenadorService.crearEntrenador(dto));
         verify(entrenadorRepository, never()).save(any());

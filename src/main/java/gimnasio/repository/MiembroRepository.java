@@ -1,4 +1,4 @@
-package gimnasio.repositoy;
+package gimnasio.repository;
 
 import gimnasio.model.Miembro;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -7,8 +7,6 @@ import java.util.Optional;
 
 
 @Repository
-public interface MiembroRepositoy extends JpaRepository<Miembro, Long> {
+public interface MiembroRepository extends JpaRepository<Miembro, Long> {
     Optional<Miembro> findByCorreo(String miembro);
-
-    boolean existsByCorreoAndIdNot(String correo, Long id);
 }

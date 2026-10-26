@@ -1,10 +1,10 @@
 package gimnasio.controller;
-
 import gimnasio.dto.ClaseRequestDTO;
 import gimnasio.dto.ClaseResponseDTO;
 import gimnasio.dto.ClaseUpdateDTO;
 import gimnasio.service.ClaseService;
-import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -12,42 +12,40 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/clases")
+@RequestMapping("/gimnasioAPI/clases")
+@RequiredArgsConstructor
 public class ClaseController {
 
-    @Autowired
-    private ClaseService claseService;
+    private final ClaseService claseService;
 
-    @GetMapping
-    public ResponseEntity<List<ClaseResponseDTO>> listarClases() {
-        return ResponseEntity.ok(claseService.obtenerTodas());
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<ClaseResponseDTO> obtenerClasePorId(@PathVariable int id) {
-        return claseService.obtenerPorId(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
-
+    //Agregar clase
     @PostMapping
-    public ResponseEntity<ClaseResponseDTO> crearClase(@RequestBody ClaseRequestDTO requestDTO) {
-        ClaseResponseDTO creada = claseService.guardar(requestDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(creada);
+    public ResponseEntity<ClaseResponseDTO> crearClase(@Valid @RequestBody ClaseRequestDTO claseDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(claseService.crearClase(claseDTO));
     }
 
+    //Obtener todas las clases
+    @GetMapping()
+    public List<ClaseResponseDTO> obtenerTodasLasClases() {
+        return claseService.listarClases();
+    }
+
+    //Obtener una clase por id
+    @GetMapping("/{id}")
+    public ClaseResponseDTO obtenerPorId(@PathVariable Long id) {
+        return claseService.obtenerPorId(id);
+    }
+
+    //Actualizar
     @PutMapping("/{id}")
-    public ResponseEntity<ClaseResponseDTO> actualizarClase(@PathVariable int id, @RequestBody ClaseUpdateDTO updateDTO) {
-        return claseService.actualizar(id, updateDTO)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ClaseResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody ClaseUpdateDTO dto) {
+        return ResponseEntity.ok(claseService.actualizar(id, dto));
     }
 
+    //Eliminar clase
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> eliminarClase(@PathVariable int id) {
-        if (claseService.eliminar(id)) {
-            return ResponseEntity.noContent().build();
-        }
-        return ResponseEntity.notFound().build();
+    public ResponseEntity<Void> eliminar(@PathVariable Long id) {
+        claseService.eliminarClase(id);
+        return ResponseEntity.noContent().build();
     }
 }

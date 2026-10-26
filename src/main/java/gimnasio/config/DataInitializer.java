@@ -1,26 +1,34 @@
 package gimnasio.config;
 
 import gimnasio.model.Administrador;
+import gimnasio.model.Clase;
 import gimnasio.model.Entrenador;
 import gimnasio.model.Miembro;
-import gimnasio.repositoy.AdministradorRepository;
-import gimnasio.repositoy.EntrenadorRepository;
-import gimnasio.repositoy.MiembroRepositoy;
+import gimnasio.repository.AdministradorRepository;
+import gimnasio.repository.ClaseRepository;
+import gimnasio.repository.EntrenadorRepository;
+import gimnasio.repository.MiembroRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.util.List;
 
 @Configuration
 public class DataInitializer {
+
+    // Contraseña de los usuarios de demostración (cumple la regla: 8 caracteres, letras y números)
+    private static final String CONTRASENA_DEMO = "clave1234";
 
     @Bean
     CommandLineRunner cargarDatos(
             AdministradorRepository administradorRepository,
             EntrenadorRepository entrenadorRepository,
-            MiembroRepositoy miembroRepository,
+            MiembroRepository miembroRepository,
+            ClaseRepository claseRepository,
             PasswordEncoder passwordEncoder) {
 
         return args -> {
@@ -30,7 +38,7 @@ public class DataInitializer {
 
                 administrador.setCorreo("admin@gimnasio.com");
                 administrador.setContrasenaHash(
-                        passwordEncoder.encode("123456")
+                        passwordEncoder.encode(CONTRASENA_DEMO)
                 );
                 administrador.setEstado("ACTIVO");
 
@@ -42,7 +50,7 @@ public class DataInitializer {
 
                 entrenador.setCorreo("entrenador@gimnasio.com");
                 entrenador.setContrasenaHash(
-                        passwordEncoder.encode("123456")
+                        passwordEncoder.encode(CONTRASENA_DEMO)
                 );
                 entrenador.setEstado("ACTIVO");
 
@@ -59,7 +67,7 @@ public class DataInitializer {
 
                 miembro.setCorreo("miembro@gimnasio.com");
                 miembro.setContrasenaHash(
-                        passwordEncoder.encode("123456")
+                        passwordEncoder.encode(CONTRASENA_DEMO)
                 );
                 miembro.setEstado("ACTIVO");
 
@@ -75,6 +83,21 @@ public class DataInitializer {
                 );
 
                 miembroRepository.save(miembro);
+            }
+
+            if (claseRepository.count() == 0) {
+                Clase clase = new Clase();
+
+                clase.setTipoClase("Spinning");
+                clase.setDiasSemana(List.of("Lunes", "Miércoles", "Viernes"));
+                clase.setHoraInicio(LocalTime.of(8, 0));
+                clase.setHoraFin(LocalTime.of(9, 0));
+                clase.setFechaInicio(LocalDate.of(2026, 11, 2));
+                clase.setCupoMaximo(20);
+                clase.setDescripcion("Clase de cardio en bicicleta fija.");
+                clase.setEstado("ACTIVA");
+
+                claseRepository.save(clase);
             }
         };
     }

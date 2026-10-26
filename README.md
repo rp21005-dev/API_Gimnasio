@@ -1,7 +1,7 @@
 # 🏋️ API_Gimnasio
 ### API REST para la gestión de usuarios de un gimnasio
 
-API REST desarrollada en Java con Spring Boot para administrar a los **administradores**, **entrenadores** y **miembros** de un gimnasio. La información se guarda en una base de datos PostgreSQL y el acceso está protegido con inicio de sesión mediante tokens JWT.
+API REST desarrollada en Java con Spring Boot para administrar a los **administradores**, **entrenadores**, **miembros** y **clases** de un gimnasio. La información se guarda en una base de datos PostgreSQL y el acceso está protegido con inicio de sesión mediante tokens JWT.
 
 El proyecto aplica los temas vistos en la Unidad 6 de la materia: caché con `@Cacheable`, registro de eventos con SLF4J, seguridad con Spring Security y JWT, y pruebas con JUnit 5, Mockito y JaCoCo.
 
@@ -51,13 +51,13 @@ El código está organizado en capas dentro de `src/main/java/gimnasio`:
 
 | Paquete | Contenido |
 |---|---|
-| `model` | Entidades. `Usuario` es la clase padre (correo, contraseña y estado) y de ella heredan `Administrador`, `Entrenador` y `Miembro`. |
+| `model` | Entidades. `Usuario` es la clase padre (correo, contraseña y estado) y de ella heredan `Administrador`, `Entrenador` y `Miembro` (herencia `JOINED`: los datos comunes van en la tabla `usuario` y los propios de cada tipo en su tabla). `Clase` guarda el horario, los días y el cupo de cada clase. |
 | `dto` | Objetos para recibir y devolver datos. Las respuestas nunca incluyen la contraseña. |
-| `repositoy` | Repositorios JPA para acceder a la base de datos. |
+| `repository` | Repositorios JPA para acceder a la base de datos. |
 | `service` | Lógica del negocio: validaciones, caché y logs. |
 | `controller` | Endpoints REST. |
 | `security` | Generación y validación de tokens JWT. |
-| `config` | Configuración de Spring Security. |
+| `config` | Configuración de Spring Security y carga de usuarios de demostración. |
 | `exception` | Manejo de errores y códigos HTTP. |
 
 ---
@@ -118,14 +118,77 @@ Authorization: Bearer <token>
 | `PUT` | `/gimnasioAPI/miembros/{id}` | Actualizar un miembro. |
 | `DELETE` | `/gimnasioAPI/miembros/{id}` | Eliminar un miembro. |
 
+### Clases
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/gimnasioAPI/clases` | Obtener todas las clases. |
+| `GET` | `/gimnasioAPI/clases/{id}` | Obtener una clase por ID. |
+| `POST` | `/gimnasioAPI/clases` | Registrar una clase. |
+| `PUT` | `/gimnasioAPI/clases/{id}` | Actualizar una clase. |
+| `DELETE` | `/gimnasioAPI/clases/{id}` | Eliminar una clase. |
+
+Ejemplo:
+
+```json
+{
+  "tipoClase": "Spinning",
+  "diasSemana": ["Lunes", "Miércoles", "Viernes"],
+  "horaInicio": "08:00:00",
+  "horaFin": "09:00:00",
+  "fechaInicio": "2026-11-01",
+  "cupoMaximo": 20,
+  "descripcion": "Clase de cardio de alta intensidad en bicicleta fija."
+}
+```
+
+### Probar con Postman
+
+En `postman/collections/API_Gimnasio` hay una colección lista para usar:
+
+1. Abrir la carpeta `postman/` en la **aplicación de escritorio** de Postman (Windows, macOS o Linux). La versión web no puede llamar a `localhost` sin instalar el Postman Desktop Agent.
+2. Ejecutar **Iniciar sesión** (usa el administrador de demostración). El token se guarda solo en la variable `token` de la colección.
+3. Las demás peticiones heredan ese token, así que no hay que copiarlo a mano. Si pasan 24 horas, volver a ejecutar **Iniciar sesión**.
+
+### Probar con curl
+
+`scripts/obtener-token.sh` inicia sesión y muestra solo el token, para guardarlo en una variable (en Windows, desde Git Bash):
+
+```bash
+TOKEN=$(./scripts/obtener-token.sh)                                  # administrador de demostración
+TOKEN=$(./scripts/obtener-token.sh miembro@gimnasio.com clave1234)   # otro usuario
+```
+
+Luego se envía en la cabecera `Authorization`:
+
+```bash
+API=http://localhost:8080/gimnasioAPI
+
+# Listar clases
+curl -s $API/clases -H "Authorization: Bearer $TOKEN"
+
+# Crear una clase
+curl -s -X POST $API/clases \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"tipoClase": "Yoga", "diasSemana": ["Martes", "Jueves"], "horaInicio": "18:00:00", "horaFin": "19:00:00", "fechaInicio": "2026-11-03", "cupoMaximo": 15}'
+
+# Registrar un miembro (público, no necesita token)
+curl -s -X POST $API/miembros \
+  -H "Content-Type: application/json" \
+  -d '{"nombres": "Ana", "apellidos": "López", "correo": "ana@ejemplo.com", "telefono": "7000-1234", "documentoIdentidad": "12345678-0", "fechaNacimiento": "2001-03-10", "contrasenaHash": "clave1234"}'
+```
+
+Los demás endpoints funcionan igual: cambiar la ruta y el método (`-X PUT`, `-X DELETE`).
+
 ---
 
 ## 📏 Reglas de negocio
 
-1. El correo no se puede repetir entre usuarios del mismo tipo.
+1. El correo no se puede repetir entre ningún usuario (administrador, entrenador o miembro), así cada correo inicia sesión con un solo rol.
 2. Las contraseñas se guardan encriptadas con BCrypt.
 3. Las respuestas de la API nunca muestran la contraseña.
-4. Los entrenadores y miembros nuevos se registran con estado `ACTIVO`.
+4. Los entrenadores y miembros nuevos se registran con estado `ACTIVO`, y las clases nuevas con estado `ACTIVA` (luego puede cambiar a `CERRADA`).
 5. Solo los usuarios con estado `ACTIVO` pueden iniciar sesión.
 6. Todos los endpoints, excepto el inicio de sesión y el registro de miembros, necesitan un token válido.
 
@@ -176,7 +239,8 @@ El usuario inicia sesión con su correo y contraseña, y la API devuelve un toke
 
 - Java 17 o superior.
 - PostgreSQL instalado y en ejecución.
-- Git.
+- Git (en Windows incluye Git Bash, necesario para los scripts).
+- Para probar la API: la aplicación de escritorio de Postman, o `curl`.
 
 ### 1. Clonar el repositorio
 
@@ -185,7 +249,24 @@ git clone https://github.com/rp21005-dev/API_Gimnasio.git
 cd API_Gimnasio
 ```
 
-### 2. Crear la base de datos
+### 2. Iniciar la API (opción rápida)
+
+```bash
+./scripts/iniciar.sh
+```
+
+El script:
+
+1. Si no existe el `.env`, lo crea a partir de `.env.example`, pide el usuario y la contraseña de PostgreSQL y genera `JWT_SECRET`.
+2. Revisa que PostgreSQL esté en ejecución.
+3. Crea la base de datos si no existe.
+4. Ejecuta `./gradlew bootRun`.
+
+### 3. Iniciar la API (opción manual)
+
+Los mismos pasos que hace el script, uno por uno:
+
+#### a. Crear la base de datos
 
 ```bash
 createdb gimnasio
@@ -193,7 +274,9 @@ createdb gimnasio
 
 Las tablas se crean automáticamente al ejecutar la aplicación.
 
-### 3. Crear el archivo `.env`
+> Si ya tenías la base de datos de una versión anterior, límpiala con `./scripts/limpiar-bd.sh` (ver paso 5): el modelo de usuarios cambió y las tablas viejas no son compatibles.
+
+#### b. Crear el archivo `.env`
 
 Copiar el archivo de ejemplo y completar los datos:
 
@@ -210,7 +293,7 @@ cp .env.example .env
 
 > El archivo `.env` no se sube al repositorio porque contiene contraseñas.
 
-### 4. Ejecutar la aplicación
+#### c. Ejecutar la aplicación
 
 Linux o macOS:
 
@@ -226,13 +309,33 @@ gradlew.bat bootRun
 
 La API queda disponible en `http://localhost:8080`.
 
-### 5. Ejecutar las pruebas
+Al iniciar, si las tablas están vacías, se crean estos usuarios de demostración (todos con la contraseña `clave1234`) y una clase de ejemplo (Spinning):
+
+| Rol | Correo |
+|---|---|
+| Administrador | `admin@gimnasio.com` |
+| Entrenador | `entrenador@gimnasio.com` |
+| Miembro | `miembro@gimnasio.com` |
+
+> Son solo para pruebas locales. Cambiar o eliminar estas cuentas si la API se usa fuera del entorno local.
+
+### 4. Ejecutar las pruebas
 
 ```bash
 ./gradlew test
 ```
 
 > Las pruebas de integración usan la base de datos local, así que PostgreSQL debe estar en ejecución. Los datos de prueba se eliminan automáticamente al terminar.
+
+### 5. Limpiar la base de datos (opcional)
+
+Para empezar de cero (por ejemplo, después de un cambio en el modelo):
+
+```bash
+./scripts/limpiar-bd.sh
+```
+
+El script lee la conexión del `.env`, pide escribir el nombre de la base de datos para confirmar, la borra y la vuelve a crear vacía, y elimina la carpeta `logs/`. Al ejecutar de nuevo `./scripts/iniciar.sh` se crean las tablas y los datos de demostración. En Windows se ejecuta desde Git Bash.
 
 ---
 

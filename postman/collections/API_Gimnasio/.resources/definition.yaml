@@ -1,0 +1,14 @@
+$kind: collection
+description: |
+  Ejecutar primero "Iniciar sesión": guarda el token en la variable `token`
+  y todas las demás peticiones lo envían automáticamente como Bearer.
+variables:
+  - key: baseUrl
+    value: http://localhost:8080/gimnasioAPI
+  - key: token
+    value: ""
+auth:
+  type: bearer
+  credentials:
+    - key: token
+      value: "{{token}}"

@@ -1,0 +1,20 @@
+$kind: http-request
+name: Crear clase
+url: "{{baseUrl}}/clases"
+method: POST
+headers:
+  - key: Content-Type
+    value: application/json
+body:
+  type: json
+  content: |
+    {
+      "tipoClase": "Yoga",
+      "diasSemana": ["Martes", "Jueves"],
+      "horaInicio": "18:00:00",
+      "horaFin": "19:00:00",
+      "fechaInicio": "2026-11-03",
+      "cupoMaximo": 15,
+      "descripcion": "Clase de yoga para principiantes."
+    }
+order: 3000

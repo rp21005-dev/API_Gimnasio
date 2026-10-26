@@ -29,22 +29,19 @@ public class SecurityConfig {
     }
 
     @Bean
-public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-    return http
-        .csrf(AbstractHttpConfigurer::disable)
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth
-            // Endpoints públicos sin requerir Token JWT
-            .requestMatchers("/api/auth/**", "/api/clases/**", "/error").permitAll()
-            .requestMatchers("/gimnasioAPI/auth/**").permitAll()
-            .requestMatchers(HttpMethod.POST, "/gimnasioAPI/miembros").permitAll()
-            
-            // Todo lo demás requiere autenticación
-            .anyRequest().authenticated()
-        )
-        // Sin token válido responde 401 Unauthorized
-        .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
-        .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-        .build();
-      }  
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        return http
+                .csrf(AbstractHttpConfigurer::disable)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
+                        // Endpoints públicos: inicio de sesión y registro de miembros
+                        .requestMatchers("/gimnasioAPI/auth/**", "/error").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/gimnasioAPI/miembros").permitAll()
+                        .anyRequest().authenticated() // Requiere JWT válido para el resto
+                )
+                // Sin token válido se responde 401 Unauthorized
+                .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .build();
+    }
 }

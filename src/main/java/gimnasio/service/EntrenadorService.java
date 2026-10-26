@@ -1,7 +1,8 @@
 package gimnasio.service;
 import gimnasio.dto.*;
 import gimnasio.model.Entrenador;
-import gimnasio.repositoy.EntrenadorRepository;
+import gimnasio.repository.UsuarioRepository;
+import gimnasio.repository.EntrenadorRepository;
 import gimnasio.exception.ConflictException;
 
 import lombok.RequiredArgsConstructor;
@@ -23,12 +24,13 @@ import java.util.NoSuchElementException;
 public class EntrenadorService {
 
     private final EntrenadorRepository entrenadorRepository;
+    private final UsuarioRepository usuarioRepository;
     private final PasswordEncoder passwordEncoder;
 
 
     @Transactional
     public EntrenadorResponseDTO crearEntrenador(EntrenadorRequestDTO dto){
-        if (entrenadorRepository.findByCorreo(dto.getCorreo()).isPresent()){
+        if (usuarioRepository.existsByCorreo(dto.getCorreo())){
             log.warn("Intento de registrar un entrenador con un correo ya existente");
             throw new ConflictException("El correo ya existe.");
         }
@@ -88,7 +90,7 @@ public class EntrenadorService {
 
         Entrenador entrenador = buscar(id);
 
-        if (entrenadorRepository.existsByCorreoAndIdNot(
+        if (usuarioRepository.existsByCorreoAndIdNot(
                 dto.getCorreo(), id)) {
 
             log.warn("No se pudo actualizar el entrenador con id {}: correo repetido", id);

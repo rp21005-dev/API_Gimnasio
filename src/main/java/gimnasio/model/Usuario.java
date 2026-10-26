@@ -9,7 +9,8 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor /// me genera el contructo con todos sus argumentos
 @NoArgsConstructor /// Genera un contructor vacio en caso que lo ocupe mas adelante
-@MappedSuperclass /// Los campos se heredan a la tabla de cada subclase
+@Entity
+@Inheritance(strategy = InheritanceType.JOINED) /// Los campos se heredan a la tabla de cada subclase
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

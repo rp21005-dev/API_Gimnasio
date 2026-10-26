@@ -36,5 +36,4 @@ public class EntrenadorRequestDTO {
     private String contrasenaHash;
 
 
-
 }

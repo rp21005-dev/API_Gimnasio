@@ -10,7 +10,7 @@ import gimnasio.model.Asistencia;
 import gimnasio.model.Clase;
 import gimnasio.model.Inscripcion;
 import gimnasio.repositoy.AsistenciaRepository;
-import gimnasio.repositoy.ClaseRepository;
+import gimnasio.repository.ClaseRepository;
 import gimnasio.repositoy.InscripcionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

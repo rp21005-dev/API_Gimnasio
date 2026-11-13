@@ -40,8 +40,12 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-security-test") // @WithMockUser
 
     //Lombok
-    compileOnly("org.projectlombok:lombok")
-    annotationProcessor("org.projectlombok:lombok")
+    compileOnly("org.projectlombok:lombok:1.18.48")
+    annotationProcessor("org.projectlombok:lombok:1.18.48")
+
+    testCompileOnly("org.projectlombok:lombok:1.18.48")
+    testAnnotationProcessor("org.projectlombok:lombok:1.18.48")
+
 
     // Seguridad: Spring Security (incluye BCrypt para contraseñas)
     implementation("org.springframework.boot:spring-boot-starter-security")

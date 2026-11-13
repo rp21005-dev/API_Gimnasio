@@ -1,4 +1,5 @@
 package gimnasio.controller;
+
 import gimnasio.dto.ClaseRequestDTO;
 import gimnasio.dto.ClaseResponseDTO;
 import gimnasio.dto.ClaseUpdateDTO;
@@ -18,31 +19,32 @@ public class ClaseController {
 
     private final ClaseService claseService;
 
-    //Agregar clase
+    // Agregar clase
     @PostMapping
-    public ResponseEntity<ClaseResponseDTO> crearClase(@Valid @RequestBody ClaseRequestDTO claseDTO) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(claseService.crearClase(claseDTO));
+    public ResponseEntity<ClaseResponseDTO> crearClase(@Valid @RequestBody ClaseRequestDTO dto) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(claseService.crearClase(dto));
     }
 
-    //Obtener todas las clases
-    @GetMapping()
-    public List<ClaseResponseDTO> obtenerTodasLasClases() {
+    // Obtener todas las clases
+    @GetMapping
+    public List<ClaseResponseDTO> obtenerTodas() {
         return claseService.listarClases();
     }
 
-    //Obtener una clase por id
+    // Obtener una clase por id
     @GetMapping("/{id}")
     public ClaseResponseDTO obtenerPorId(@PathVariable Long id) {
         return claseService.obtenerPorId(id);
     }
 
-    //Actualizar
+    // Actualizar clase
     @PutMapping("/{id}")
-    public ResponseEntity<ClaseResponseDTO> actualizar(@PathVariable Long id, @Valid @RequestBody ClaseUpdateDTO dto) {
+    public ResponseEntity<ClaseResponseDTO> actualizar(@PathVariable Long id,
+                                                       @Valid @RequestBody ClaseUpdateDTO dto) {
         return ResponseEntity.ok(claseService.actualizar(id, dto));
     }
 
-    //Eliminar clase
+    // Eliminar clase
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminar(@PathVariable Long id) {
         claseService.eliminarClase(id);

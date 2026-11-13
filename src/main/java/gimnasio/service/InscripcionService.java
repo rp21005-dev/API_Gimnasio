@@ -7,9 +7,9 @@ import gimnasio.exception.ConflictException;
 import gimnasio.model.Clase;
 import gimnasio.model.Inscripcion;
 import gimnasio.model.Miembro;
-import gimnasio.repositoy.ClaseRepository;
+import gimnasio.repository.ClaseRepository;
 import gimnasio.repositoy.InscripcionRepository;
-import gimnasio.repositoy.MiembroRepositoy;
+import gimnasio.repository.MiembroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +26,7 @@ public class InscripcionService {
     private InscripcionRepository inscripcionRepository;
 
     @Autowired
-    private MiembroRepositoy miembroRepository;
+    private MiembroRepository miembroRepository;
 
     @Autowired
     private ClaseRepository claseRepository;

@@ -23,4 +23,12 @@ public class ClaseResponseDTO {
     private int cupoMaximo;
     private String descripcion;
     private String estado;
+
+    // Relaciones (pueden ser null en clases creadas antes de agregar las relaciones)
+    private Long categoriaId;
+    private String categoriaNombre;
+    private Long salaId;
+    private String salaNombre;
+    private Long entrenadorId;
+    private String entrenadorNombre;
 }

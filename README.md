@@ -1,7 +1,7 @@
 # 🏋️ API_Gimnasio
 ### API REST para la gestión de usuarios de un gimnasio
 
-API REST desarrollada en Java con Spring Boot para administrar a los **administradores**, **entrenadores**, **miembros** y **clases** de un gimnasio. La información se guarda en una base de datos PostgreSQL y el acceso está protegido con inicio de sesión mediante tokens JWT.
+API REST desarrollada en Java con Spring Boot para administrar a los **administradores**, **entrenadores**, **miembros**, **clases**, **categorías**, **salas**, **inscripciones** y **asistencias** de un gimnasio. La información se guarda en una base de datos PostgreSQL y el acceso está protegido con inicio de sesión mediante tokens JWT.
 
 El proyecto aplica los temas vistos en la Unidad 6 de la materia: caché con `@Cacheable`, registro de eventos con SLF4J, seguridad con Spring Security y JWT, y pruebas con JUnit 5, Mockito y JaCoCo.
 
@@ -42,6 +42,8 @@ El proyecto aplica los temas vistos en la Unidad 6 de la materia: caché con `@C
 | **JUnit 5, Mockito y JaCoCo** | Pruebas y reporte de cobertura. |
 | **Lombok** | Generar getters, setters y constructores. |
 | **Gradle** | Compilar y ejecutar el proyecto. |
+| **Docker** | Contenedor de la API y de PostgreSQL para despliegue local. |
+| **GitHub Actions** | Construcción y publicación automática de la imagen en GHCR. |
 
 ---
 
@@ -51,13 +53,13 @@ El código está organizado en capas dentro de `src/main/java/gimnasio`:
 
 | Paquete | Contenido |
 |---|---|
-| `model` | Entidades. `Usuario` es la clase padre (correo, contraseña y estado) y de ella heredan `Administrador`, `Entrenador` y `Miembro` (herencia `JOINED`: los datos comunes van en la tabla `usuario` y los propios de cada tipo en su tabla). `Clase` guarda el horario, los días y el cupo de cada clase. |
+| `model` | Entidades. `Usuario` es la clase padre (correo, contraseña y estado) y de ella heredan `Administrador`, `Entrenador` y `Miembro` (herencia `JOINED`: los datos comunes van en la tabla `usuario` y los propios de cada tipo en su tabla). `Clase` guarda el tipo, el horario, los días, el cupo, el estado y las relaciones con `Categoria`, `Sala` y `Entrenador`. Además existen `Categoria`, `Sala`, `Inscripcion` y `Asistencia`. |
 | `dto` | Objetos para recibir y devolver datos. Las respuestas nunca incluyen la contraseña. |
 | `repository` | Repositorios JPA para acceder a la base de datos. |
 | `service` | Lógica del negocio: validaciones, caché y logs. |
 | `controller` | Endpoints REST. |
 | `security` | Generación y validación de tokens JWT. |
-| `config` | Configuración de Spring Security y carga de usuarios de demostración. |
+| `config` | Configuración de Spring Security, carga de usuarios de demostración y catálogo inicial. |
 | `exception` | Manejo de errores y códigos HTTP. |
 
 ---
@@ -120,6 +122,12 @@ Authorization: Bearer <token>
 
 ### Clases
 
+`POST` y `PUT` requieren `categoriaId`, `salaId` y `entrenadorId`. En `POST`, la
+`fechaInicio` no puede ser anterior a hoy. El `tipoClase` debe coincidir con uno
+de los `tiposClase` de la categoría, el `cupoMaximo` no puede superar la
+capacidad de la sala y la clase no puede traslaparse con otra del mismo
+entrenador o sala en el mismo día y horario.
+
 | Método | Endpoint | Descripción |
 |---|---|---|
 | `GET` | `/gimnasioAPI/clases` | Obtener todas las clases. |
@@ -132,13 +140,102 @@ Ejemplo:
 
 ```json
 {
-  "tipoClase": "Spinning",
-  "diasSemana": ["Lunes", "Miércoles", "Viernes"],
-  "horaInicio": "08:00:00",
-  "horaFin": "09:00:00",
-  "fechaInicio": "2026-11-01",
-  "cupoMaximo": 20,
-  "descripcion": "Clase de cardio de alta intensidad en bicicleta fija."
+  "tipoClase": "Zumba",
+  "diasSemana": ["Martes", "Jueves"],
+  "horaInicio": "18:00:00",
+  "horaFin": "19:00:00",
+  "fechaInicio": "2026-12-01",
+  "cupoMaximo": 15,
+  "descripcion": "Clase de zumba.",
+  "categoriaId": 1,
+  "salaId": 1,
+  "entrenadorId": 2
+}
+```
+
+### Categorías
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/gimnasioAPI/categorias` | Obtener todas las categorías. |
+| `GET` | `/gimnasioAPI/categorias/{id}` | Obtener una categoría por ID. |
+| `POST` | `/gimnasioAPI/categorias` | Registrar una categoría. |
+| `PUT` | `/gimnasioAPI/categorias/{id}` | Actualizar una categoría. |
+| `DELETE` | `/gimnasioAPI/categorias/{id}` | Eliminar una categoría. |
+
+Ejemplo:
+
+```json
+{
+  "nombre": "Funcional",
+  "objetivoPrincipal": "Mejorar la condición física general.",
+  "tiposClase": ["HIIT", "Circuitos", "Core"]
+}
+```
+
+### Salas
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `GET` | `/gimnasioAPI/salas` | Obtener todas las salas. |
+| `GET` | `/gimnasioAPI/salas/{id}` | Obtener una sala por ID. |
+| `POST` | `/gimnasioAPI/salas` | Registrar una sala. |
+| `PUT` | `/gimnasioAPI/salas/{id}` | Actualizar una sala. |
+| `DELETE` | `/gimnasioAPI/salas/{id}` | Eliminar una sala. |
+
+Ejemplo:
+
+```json
+{
+  "codigo": "S-04",
+  "nombre": "Sala de Pesas",
+  "ubicacion": "Planta baja",
+  "capacidadMaxima": 40,
+  "descripcion": "Zona de pesas libres y máquinas."
+}
+```
+
+### Inscripciones
+
+Estas rutas usan el prefijo **`/api`**, no `/gimnasioAPI`.
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `POST` | `/api/inscripciones` | Inscribir un miembro a una clase. |
+| `GET` | `/api/inscripciones` | Listar inscripciones (opcional: `?miembroId=` o `?claseId=`). |
+| `GET` | `/api/inscripciones/{id}` | Obtener una inscripción por ID. |
+| `PUT` | `/api/inscripciones/{id}` | Cambiar de clase. |
+| `DELETE` | `/api/inscripciones/{id}` | Cancelar una inscripción. |
+
+Ejemplo:
+
+```json
+{ "claseId": 1, "miembroId": 3 }
+```
+
+### Asistencias
+
+Estas rutas usan el prefijo **`/api`**, no `/gimnasioAPI`.
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| `POST` | `/api/asistencias` | Registrar la asistencia de una sesión. |
+| `GET` | `/api/asistencias` | Listar asistencias (opcional: `?miembroId=` o `?claseId=`). |
+| `GET` | `/api/asistencias/{id}` | Obtener una asistencia por ID. |
+| `GET` | `/api/asistencias/clases/{claseId}/sesiones/{fecha}/asistencia` | Hoja de asistencia de una sesión. |
+| `PUT` | `/api/asistencias/{id}` | Corregir una asistencia. |
+| `DELETE` | `/api/asistencias/{id}` | Eliminar un registro de asistencia. |
+
+Ejemplo:
+
+```json
+{
+  "claseId": 1,
+  "fechaSesion": "2026-11-17",
+  "registros": [
+    { "miembroId": 3, "estado": "PRESENTE", "observacion": "Llegó a tiempo" },
+    { "miembroId": 4, "estado": "AUSENTE", "observacion": "Sin aviso" }
+  ]
 }
 ```
 
@@ -171,7 +268,7 @@ curl -s $API/clases -H "Authorization: Bearer $TOKEN"
 curl -s -X POST $API/clases \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"tipoClase": "Yoga", "diasSemana": ["Martes", "Jueves"], "horaInicio": "18:00:00", "horaFin": "19:00:00", "fechaInicio": "2026-11-03", "cupoMaximo": 15}'
+  -d '{"tipoClase": "Zumba", "diasSemana": ["Martes", "Jueves"], "horaInicio": "18:00:00", "horaFin": "19:00:00", "fechaInicio": "2026-12-01", "cupoMaximo": 15, "categoriaId": 1, "salaId": 1, "entrenadorId": 2}'
 
 # Registrar un miembro (público, no necesita token)
 curl -s -X POST $API/miembros \
@@ -179,7 +276,7 @@ curl -s -X POST $API/miembros \
   -d '{"nombres": "Ana", "apellidos": "López", "correo": "ana@ejemplo.com", "telefono": "7000-1234", "documentoIdentidad": "12345678-0", "fechaNacimiento": "2001-03-10", "contrasenaHash": "clave1234"}'
 ```
 
-Los demás endpoints funcionan igual: cambiar la ruta y el método (`-X PUT`, `-X DELETE`).
+Los demás endpoints funcionan igual: cambiar la ruta y el método (`-X PUT`, `-X DELETE`). Hay ejemplos completos de todos los recursos en **`EJEMPLOS_API.md`**, en la raíz del proyecto.
 
 ---
 
@@ -191,6 +288,10 @@ Los demás endpoints funcionan igual: cambiar la ruta y el método (`-X PUT`, `-
 4. Los entrenadores y miembros nuevos se registran con estado `ACTIVO`, y las clases nuevas con estado `ACTIVA` (luego puede cambiar a `CERRADA`).
 5. Solo los usuarios con estado `ACTIVO` pueden iniciar sesión.
 6. Todos los endpoints, excepto el inicio de sesión y el registro de miembros, necesitan un token válido.
+7. El `tipoClase` debe coincidir con uno de los tipos definidos en la categoría.
+8. El `cupoMaximo` no puede superar la capacidad de la sala.
+9. Una clase no puede traslaparse con otra del mismo entrenador o de la misma sala en el mismo día y horario.
+10. En `POST /clases`, la `fechaInicio` no puede ser anterior a hoy.
 
 ---
 
@@ -204,7 +305,7 @@ Los demás endpoints funcionan igual: cambiar la ruta y el método (`-X PUT`, `-
 | `400` | Bad Request | Datos inválidos o incompletos. |
 | `401` | Unauthorized | No se envió token, el token no es válido o las credenciales son incorrectas. |
 | `404` | Not Found | El registro no existe. |
-| `409` | Conflict | El correo ya está registrado. |
+| `409` | Conflict | El correo ya está registrado o hay un traslape de horario. |
 
 ---
 
@@ -218,7 +319,7 @@ La consulta por ID (`GET /{id}`) se guarda en memoria. La primera vez se consult
 ### Logs con SLF4J
 Los servicios usan `@Slf4j` para registrar eventos con distintos niveles:
 - `INFO`: registros creados, actualizados o eliminados.
-- `WARN`: correo repetido o intento de eliminar un registro que no existe.
+- `WARN`: correo repetido, intento de eliminar un registro que no existe o traslapes de horario.
 - `DEBUG`: consultas a la base de datos.
 
 Los logs se muestran en consola y también se guardan en `logs/gimnasio.log`.
@@ -238,7 +339,7 @@ El usuario inicia sesión con su correo y contraseña, y la API devuelve un toke
 ### Requisitos
 
 - Java 17 o superior.
-- PostgreSQL instalado y en ejecución.
+- PostgreSQL instalado y en ejecución (o usar Docker, ver la sección al final).
 - Git (en Windows incluye Git Bash, necesario para los scripts).
 - Para probar la API: la aplicación de escritorio de Postman, o `curl`.
 
@@ -261,6 +362,8 @@ El script:
 2. Revisa que PostgreSQL esté en ejecución.
 3. Crea la base de datos si no existe.
 4. Ejecuta `./gradlew bootRun`.
+
+> Los scripts usan `psql`, `pg_isready` y `createdb`, así que es necesario tener las herramientas de PostgreSQL instaladas y en el `PATH`.
 
 ### 3. Iniciar la API (opción manual)
 
@@ -309,7 +412,7 @@ gradlew.bat bootRun
 
 La API queda disponible en `http://localhost:8080`.
 
-Al iniciar, si las tablas están vacías, se crean estos usuarios de demostración (todos con la contraseña `clave1234`) y una clase de ejemplo (Spinning):
+Al iniciar, si las tablas están vacías, se crean estos usuarios de demostración (todos con la contraseña `clave1234`), un catálogo de 6 categorías, 3 salas y una clase de ejemplo (Spinning):
 
 | Rol | Correo |
 |---|---|
@@ -342,3 +445,99 @@ El script lee la conexión del `.env`, pide escribir el nombre de la base de dat
 ## 📄 Licencia
 
 Proyecto desarrollado con fines académicos para la asignatura de Programación Orientada a Objetos de la Universidad de El Salvador.
+
+---
+
+## 🐳 Implementación con Docker
+
+El proyecto incluye un `Dockerfile` de dos etapas (compilación con Gradle y ejecución con JRE 17) y un `docker-compose.yml` que levanta la API junto con PostgreSQL 16.
+
+### Requisitos
+
+- Docker Desktop (o Docker Engine + Compose) instalado y en ejecución.
+
+### 1. Configurar el `.env`
+
+```bash
+cp .env.example .env
+```
+
+Complete al menos `DB_PASSWORD` y `JWT_SECRET`. No es necesario cambiar `DB_URL`: Compose lo sobrescribe internamente con `jdbc:postgresql://postgres:5432/gimnasio`, porque dentro de la red de Docker la base de datos se llama `postgres`, no `localhost`.
+
+> El archivo `.dockerignore` excluye el `.env` y la carpeta `build/`, así que las credenciales no se copian a la imagen.
+
+### 2. Levantar los contenedores
+
+```bash
+docker compose up --build -d
+```
+
+Esto construye la imagen `api-gimnasio:1.0`, espera a que PostgreSQL esté sano (healthcheck) y arranca la API.
+
+### 3. Verificar y probar
+
+```bash
+docker compose ps                 # estado de los contenedores
+docker compose logs -f api        # logs de la API
+```
+
+La API queda en `http://localhost:8080`. Por ejemplo:
+
+```bash
+curl -s -X POST http://localhost:8080/gimnasioAPI/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"correo":"admin@gimnasio.com","contrasena":"clave1234"}'
+```
+
+### 4. Detener
+
+```bash
+docker compose down        # detiene y conserva la base de datos
+docker compose down -v     # detiene y elimina el volumen de datos
+```
+
+### Puertos
+
+| Servicio | Contenedor | Host |
+|---|---|---|
+| API | `8080` | `8080` |
+| PostgreSQL | `5432` | `5433` |
+
+El puerto del host para PostgreSQL es `5433` porque el `5432` del equipo puede estar ocupado por otra instancia. La API se conecta igualmente al `5432` del contenedor `postgres` dentro de la red de Compose.
+
+---
+
+## 🔄 CI/CD con GitHub Actions
+
+El flujo está en `.github/workflows/docker.yml`. Construye la imagen con el `Dockerfile` y la publica en **GitHub Container Registry (GHCR)**.
+
+### Cuándo se ejecuta
+
+- Push a `main` o a etiquetas `v*`: construye **y** publica.
+- Pull request a `main`: solo construye (no publica).
+- Ejecución manual desde la pestaña **Actions** (`workflow_dispatch`).
+
+### Imagen generada
+
+```
+ghcr.io/<dueño-del-repositorio>/api-gimnasio:<etiqueta>
+```
+
+Las etiquetas son el nombre de la rama, la versión (si el push es una etiqueta `v*`) y el SHA corto del commit.
+
+### Secretos de GitHub
+
+Para construir y publicar en GHCR **no hay que crear secretos**: se usa el `GITHUB_TOKEN` que GitHub proporciona automáticamente. Si más adelante se agrega un paso de despliegue a Kubernetes, sí harían falta secretos como `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` y `KUBE_CONFIG` (en **Settings → Secrets and variables → Actions**).
+
+### Usar la imagen en Kubernetes
+
+1. Actualizar `kubernetes/deployment.yaml` con la imagen de GHCR, por ejemplo `ghcr.io/rp21005-dev/api-gimnasio:main`.
+2. Crear el `gimnasio-secret` con las credenciales (los manifiestos ya lo referencian):
+
+   ```bash
+   kubectl create secret generic gimnasio-secret \
+     --from-env-file=.env \
+     --dry-run=client -o yaml | kubectl apply -f -
+   ```
+
+3. Si el paquete de GHCR es privado, crear un `imagePullSecret` y referenciarlo en el `Deployment`.

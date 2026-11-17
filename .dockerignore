@@ -1,0 +1,21 @@
+# Git
+.git
+.gitignore
+
+# Gradle / Java
+.gradle
+build
+out
+*.iml
+.idea
+
+# Secrets and local runtime files
+.env
+logs
+*.log
+
+# Documentation and local-only folders
+*.md
+kubernetes
+postman
+scripts

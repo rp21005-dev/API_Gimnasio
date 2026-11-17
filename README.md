@@ -509,12 +509,15 @@ El puerto del host para PostgreSQL es `5433` porque el `5432` del equipo puede e
 
 ## 🔄 CI/CD con GitHub Actions
 
-El flujo está en `.github/workflows/docker.yml`. Construye la imagen con el `Dockerfile` y la publica en **GitHub Container Registry (GHCR)**.
+El flujo está en `.github/workflows/docker.yml` y tiene dos trabajos:
+
+- `build`: construye la imagen con el `Dockerfile` y la publica en **GitHub Container Registry (GHCR)**.
+- `deploy`: levanta un clúster efímero con **kind** en el propio runner, carga la imagen, crea el Secret, despliega PostgreSQL y la API, y prueba el inicio de sesión.
 
 ### Cuándo se ejecuta
 
-- Push a `main` o a etiquetas `v*`: construye **y** publica.
-- Pull request a `main`: solo construye (no publica).
+- Push a `main` o a etiquetas `v*`: construye, publica y despliega en kind.
+- Pull request a `main`: solo construye (no publica ni despliega).
 - Ejecución manual desde la pestaña **Actions** (`workflow_dispatch`).
 
 ### Imagen generada
@@ -527,17 +530,43 @@ Las etiquetas son el nombre de la rama, la versión (si el push es una etiqueta 
 
 ### Secretos de GitHub
 
-Para construir y publicar en GHCR **no hay que crear secretos**: se usa el `GITHUB_TOKEN` que GitHub proporciona automáticamente. Si más adelante se agrega un paso de despliegue a Kubernetes, sí harían falta secretos como `DB_URL`, `DB_USER`, `DB_PASSWORD`, `JWT_SECRET` y `KUBE_CONFIG` (en **Settings → Secrets and variables → Actions**).
+| Secreto | Para qué |
+|---|---|
+| `DB_USER` | Usuario de PostgreSQL y de la API. |
+| `DB_PASSWORD` | Contraseña de PostgreSQL y de la API. |
+| `JWT_SECRET` | Clave para firmar los tokens (mínimo 32 caracteres). |
+| `POSTGRES_DB` | Nombre de la base de datos que crea la imagen de Postgres. |
 
-### Usar la imagen en Kubernetes
+Se crean en **Settings → Secrets and variables → Actions**. El job `deploy` los inyecta como variables de entorno y crea el `gimnasio-secret` en el clúster con `kubectl create secret ... --from-literal`. GitHub oculta sus valores en los logs.
 
-1. Actualizar `kubernetes/deployment.yaml` con la imagen de GHCR, por ejemplo `ghcr.io/rp21005-dev/api-gimnasio:main`.
-2. Crear el `gimnasio-secret` con las credenciales (los manifiestos ya lo referencian):
+Para construir y publicar en GHCR no hace falta ningún secreto adicional: se usa el `GITHUB_TOKEN` automático. Como el clúster es efímero (kind), **no** se necesita `KUBE_CONFIG` ni `imagePullSecret`.
 
-   ```bash
-   kubectl create secret generic gimnasio-secret \
-     --from-env-file=.env \
-     --dry-run=client -o yaml | kubectl apply -f -
-   ```
+### Despliegue educativo (kind)
 
-3. Si el paquete de GHCR es privado, crear un `imagePullSecret` y referenciarlo en el `Deployment`.
+El job `deploy`:
+
+1. Crea un clúster temporal con `helm/kind-action`.
+2. Construye la imagen `api-gimnasio:1.0` y la carga con `kind load docker-image`.
+3. Crea el Secret `gimnasio-secret` a partir de los GitHub Secrets.
+4. Aplica `kubernetes/configmap.yaml` y `kubernetes/postgres.yaml`, y espera a que PostgreSQL esté listo.
+5. Aplica `kubernetes/deployment.yaml` y `kubernetes/service.yaml`, y espera a que la API esté lista.
+6. Hace un `port-forward` y prueba `POST /gimnasioAPI/auth/login`.
+
+Los manifiestos están en `kubernetes/`:
+
+| Archivo | Contenido |
+|---|---|
+| `configmap.yaml` | `DB_URL` apuntando al Service `postgres`. |
+| `postgres.yaml` | PVC, Deployment y Service de PostgreSQL 16. |
+| `deployment.yaml` | Deployment de la API (imagen `api-gimnasio:1.0`, con sondas de salud). |
+| `service.yaml` | Service `NodePort` en el puerto 8080. |
+| `secret.example.yaml` | Plantilla del Secret (no se aplica; el real se crea desde GitHub Secrets). |
+
+### Despliegue en un clúster real
+
+Para apuntar a un clúster real (EKS, GKE, AKS, k3s, etc.):
+
+1. Guardar el kubeconfig en base64 como el secreto `KUBE_CONFIG`.
+2. Cambiar la imagen del `deployment.yaml` a la de GHCR, por ejemplo `ghcr.io/rp21005-dev/api-gimnasio:main`.
+3. Crear un `imagePullSecret` si el paquete de GHCR es privado y referenciarlo en el `Deployment`.
+4. Sustituir el job de kind por un `kubectl apply -f kubernetes/` autenticado con el `KUBE_CONFIG`.

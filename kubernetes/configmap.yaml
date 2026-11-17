@@ -3,4 +3,5 @@ kind: ConfigMap
 metadata:
   name: gimnasio-config
 data:
-  DB_URL: "jdbc:postgresql://HOST_POSTGRES:5432/gimnasio"
+  # Dentro del clúster, la base de datos es el Service "postgres".
+  DB_URL: "jdbc:postgresql://postgres:5432/gimnasio"

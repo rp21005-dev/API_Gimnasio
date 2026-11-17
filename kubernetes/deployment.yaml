@@ -18,6 +18,16 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
 
           env:
             - name: DB_URL

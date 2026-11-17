@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: gimnasio-postgres
+    environment:
+      POSTGRES_USER: ${DB_USER:?missing DB_USER in .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?missing DB_PASSWORD in .env}
+      POSTGRES_DB: gimnasio
+    ports:
+      # El 5432 del host lo ocupa otro contenedor (postgres-db); la app usa la red interna.
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER} -d gimnasio"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  api:
+    build: .
+    image: api-gimnasio:1.0
+    container_name: gimnasio-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      # En la red de Compose la base de datos se llama "postgres", no "localhost".
+      DB_URL: jdbc:postgresql://postgres:5432/gimnasio
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET:?missing JWT_SECRET in .env}
+    ports:
+      - "8080:8080"
+
+volumes:
+  postgres_data:

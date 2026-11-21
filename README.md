@@ -247,6 +247,8 @@ En `postman/collections/API_Gimnasio` hay una colección lista para usar:
 2. Ejecutar **Iniciar sesión** (usa el administrador de demostración). El token se guarda solo en la variable `token` de la colección.
 3. Las demás peticiones heredan ese token, así que no hay que copiarlo a mano. Si pasan 24 horas, volver a ejecutar **Iniciar sesión**.
 
+También está `API_Gimnasio.postman_collection.json` con todas las peticiones (incluidas categorías, salas, inscripciones y asistencias), para importarla con **Import** en cualquier versión de Postman.
+
 ### Probar con curl
 
 `scripts/obtener-token.sh` inicia sesión y muestra solo el token, para guardarlo en una variable (en Windows, desde Git Bash):
@@ -328,9 +330,14 @@ Los logs se muestran en consola y también se guardan en `logs/gimnasio.log`.
 El usuario inicia sesión con su correo y contraseña, y la API devuelve un token firmado que dura 24 horas. Un filtro revisa el token en cada petición; si no es válido, la API responde `401`.
 
 ### Pruebas y cobertura
-- **Prueba unitaria** (`EntrenadorServiceTest`): prueba el servicio con JUnit 5 y Mockito, sin base de datos.
-- **Prueba de integración** (`EntrenadorControllerIntegrationTest`): levanta toda la aplicación con `@SpringBootTest` y prueba los endpoints con MockMvc.
-- **JaCoCo**: genera el reporte de cobertura en `build/reports/jacoco/test/html/index.html`.
+76 pruebas con JUnit 5, todas en verde. Se ejecutan sobre una base de datos **H2 en memoria** (configurada en `src/test/resources/application.properties`), así que no necesitan PostgreSQL ni el archivo `.env` y pasan igual en cualquier equipo y en el pipeline.
+
+| Tipo | Clases | Qué prueban |
+|---|---|---|
+| **Unitarias** (JUnit 5 + Mockito, sin base de datos) | `EntrenadorServiceTest`, `CategoriaServiceTest`, `SalaServiceTest`, `ClaseServiceTest`, `InscripcionServiceTest`, `AsistenciaServiceTest` | Reglas de negocio de cada servicio: duplicados, días y horarios, cupo vs. capacidad de la sala, traslapes, estado del miembro/clase, historial de solo lectura. |
+| **Integración** (`@SpringBootTest` + MockMvc) | `EntrenadorControllerIntegrationTest`, `AuthControllerIntegrationTest`, `FlujoGimnasioIntegrationTest` | Login real con JWT por rol, `401` sin token, y el flujo completo categoría → sala → clase → inscripción → asistencia con los códigos `201`, `400`, `404` y `409`. |
+
+- **JaCoCo**: genera el reporte de cobertura en `build/reports/jacoco/test/html/index.html` (≈79 % de instrucciones).
 
 ---
 
@@ -428,7 +435,7 @@ Al iniciar, si las tablas están vacías, se crean estos usuarios de demostraci�
 ./gradlew test
 ```
 
-> Las pruebas de integración usan la base de datos local, así que PostgreSQL debe estar en ejecución. Los datos de prueba se eliminan automáticamente al terminar.
+> Las pruebas usan una base de datos H2 en memoria: no hace falta tener PostgreSQL en ejecución ni el archivo `.env`. El resultado queda en `build/reports/tests/test/index.html` y la cobertura en `build/reports/jacoco/test/html/index.html`.
 
 ### 5. Limpiar la base de datos (opcional)
 
@@ -504,6 +511,15 @@ docker compose down -v     # detiene y elimina el volumen de datos
 | PostgreSQL | `5432` | `5433` |
 
 El puerto del host para PostgreSQL es `5433` porque el `5432` del equipo puede estar ocupado por otra instancia. La API se conecta igualmente al `5432` del contenedor `postgres` dentro de la red de Compose.
+
+### Variables de entorno de la API
+
+| Variable | Descripción |
+|---|---|
+| `DB_URL`, `DB_USER`, `DB_PASSWORD` | Conexión a PostgreSQL (`DB_URL` en formato JDBC: `jdbc:postgresql://...`). |
+| `JWT_SECRET` | Clave para firmar los tokens (mínimo 32 caracteres). |
+| `PORT` | Puerto del servidor (por defecto `8080`). Plataformas como Railway o Render lo asignan solas. |
+| `DATOS_DEMO` | `true` (por defecto) crea los usuarios de demostración con la contraseña `clave1234`; usar `false` en producción. |
 
 ---
 

@@ -9,7 +9,7 @@ import gimnasio.model.Inscripcion;
 import gimnasio.model.Miembro;
 import gimnasio.repository.ClaseRepository;
 import gimnasio.repository.MiembroRepository;
-import gimnasio.repositoy.InscripcionRepository;
+import gimnasio.repository.InscripcionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

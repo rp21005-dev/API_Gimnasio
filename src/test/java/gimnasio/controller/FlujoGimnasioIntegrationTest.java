@@ -111,27 +111,27 @@ class FlujoGimnasioIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.salaNombre").value("Sala Flujo"));
 
-        Long inscripcionId = id(postJson("/api/inscripciones", """
+        Long inscripcionId = id(postJson("/gimnasioAPI/inscripciones", """
                 {"claseId": %d, "miembroId": %d}
                 """.formatted(claseId, miembroId))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.cupoDisponibleRestante").value(4)));
 
         // Inscribirse dos veces en la misma clase -> 409
-        postJson("/api/inscripciones", """
+        postJson("/gimnasioAPI/inscripciones", """
                 {"claseId": %d, "miembroId": %d}
                 """.formatted(claseId, miembroId))
                 .andExpect(status().isConflict());
 
-        mockMvc.perform(get("/api/inscripciones").param("miembroId", miembroId.toString()))
+        mockMvc.perform(get("/gimnasioAPI/inscripciones").param("miembroId", miembroId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
 
-        mockMvc.perform(get("/api/inscripciones/{id}", inscripcionId))
+        mockMvc.perform(get("/gimnasioAPI/inscripciones/{id}", inscripcionId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.tipoClase").value("Yoga Flujo"));
 
-        Long asistenciaId = ((Number) JsonPath.read(postJson("/api/asistencias", """
+        Long asistenciaId = ((Number) JsonPath.read(postJson("/gimnasioAPI/asistencias", """
                 {"claseId": %d, "fechaSesion": "%s",
                  "registros": [{"miembroId": %d, "estado": "ausente"}]}
                 """.formatted(claseId, HOY, miembroId))
@@ -140,22 +140,22 @@ class FlujoGimnasioIntegrationTest {
                 .andExpect(jsonPath("$.sinRegistro").value(0))
                 .andReturn().getResponse().getContentAsString(), "$.registros[0].id")).longValue();
 
-        mockMvc.perform(get("/api/asistencias/clases/{claseId}/sesiones/{fecha}/asistencia", claseId, HOY))
+        mockMvc.perform(get("/gimnasioAPI/asistencias/clases/{claseId}/sesiones/{fecha}/asistencia", claseId, HOY))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.registros.length()").value(1));
 
-        mockMvc.perform(put("/api/asistencias/{id}", asistenciaId)
+        mockMvc.perform(put("/gimnasioAPI/asistencias/{id}", asistenciaId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"estado\": \"presente\", \"observacion\": \"Llegó tarde\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.estado").value("PRESENTE"));
 
-        mockMvc.perform(get("/api/asistencias").param("claseId", claseId.toString()))
+        mockMvc.perform(get("/gimnasioAPI/asistencias").param("claseId", claseId.toString()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].observacion").value("Llegó tarde"));
 
-        mockMvc.perform(delete("/api/asistencias/{id}", asistenciaId)).andExpect(status().isNoContent());
-        mockMvc.perform(delete("/api/inscripciones/{id}", inscripcionId)).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/gimnasioAPI/asistencias/{id}", asistenciaId)).andExpect(status().isNoContent());
+        mockMvc.perform(delete("/gimnasioAPI/inscripciones/{id}", inscripcionId)).andExpect(status().isNoContent());
         mockMvc.perform(delete("/gimnasioAPI/clases/{id}", claseId)).andExpect(status().isNoContent());
         mockMvc.perform(get("/gimnasioAPI/clases/{id}", claseId)).andExpect(status().isNotFound());
     }
@@ -168,11 +168,11 @@ class FlujoGimnasioIntegrationTest {
         Long claseManana = id(postJson("/gimnasioAPI/clases", claseJson(categoriaId, salaId, "06:00", "07:00", 5)));
         Long claseNoche = id(postJson("/gimnasioAPI/clases", claseJson(categoriaId, salaId, "19:00", "20:00", 3)));
 
-        Long inscripcionId = id(postJson("/api/inscripciones", """
+        Long inscripcionId = id(postJson("/gimnasioAPI/inscripciones", """
                 {"claseId": %d, "miembroId": %d}
                 """.formatted(claseManana, miembroId)));
 
-        mockMvc.perform(put("/api/inscripciones/{id}", inscripcionId)
+        mockMvc.perform(put("/gimnasioAPI/inscripciones/{id}", inscripcionId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"nuevaClaseId\": %d}".formatted(claseNoche)))
                 .andExpect(status().isOk())

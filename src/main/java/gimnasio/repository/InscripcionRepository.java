@@ -1,4 +1,4 @@
-package gimnasio.repositoy;
+package gimnasio.repository;
 
 import gimnasio.model.Inscripcion;
 import org.springframework.data.jpa.repository.JpaRepository;

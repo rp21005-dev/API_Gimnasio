@@ -8,7 +8,7 @@ import gimnasio.model.Clase;
 import gimnasio.model.Inscripcion;
 import gimnasio.model.Miembro;
 import gimnasio.repository.ClaseRepository;
-import gimnasio.repositoy.InscripcionRepository;
+import gimnasio.repository.InscripcionRepository;
 import gimnasio.repository.MiembroRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Service
@@ -41,7 +42,7 @@ public class InscripcionService {
 
         // 1. Validar que el miembro exista y esté activo (CU-06 Paso 5)
         Miembro miembro = miembroRepository.findById(miembroId)
-                .orElseThrow(() -> new RuntimeException("Miembro no encontrado con ID: " + miembroId));
+                .orElseThrow(() -> new NoSuchElementException("Miembro no encontrado con ID: " + miembroId));
 
         if (!"activo".equalsIgnoreCase(miembro.getEstado())) {
             throw new ConflictException("El miembro no está activo.");
@@ -49,7 +50,7 @@ public class InscripcionService {
 
         // 2. Validar que la clase exista y esté activa (CU-06 Paso 6)
         Clase claseDestino = claseRepository.findById(requestDTO.getClaseId())
-                .orElseThrow(() -> new RuntimeException("Clase no encontrada con ID: " + requestDTO.getClaseId()));
+                .orElseThrow(() -> new NoSuchElementException("Clase no encontrada con ID: " + requestDTO.getClaseId()));
 
         if (!"activa".equalsIgnoreCase(claseDestino.getEstado())) {
             throw new ConflictException("La clase está cerrada o inactiva.");
@@ -87,10 +88,10 @@ public class InscripcionService {
     @Transactional
     public InscripcionResponseDTO cambiarClase(Long id, InscripcionUpdateDTO updateDTO, Long usuarioId) {
         Inscripcion inscripcionActual = inscripcionRepository.findByIdAndEstado(id, "activa")
-                .orElseThrow(() -> new RuntimeException("Inscripción activa no encontrada con ID: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Inscripción activa no encontrada con ID: " + id));
 
         Clase nuevaClase = claseRepository.findById(updateDTO.getNuevaClaseId())
-                .orElseThrow(() -> new RuntimeException("Nueva clase no encontrada con ID: " + updateDTO.getNuevaClaseId()));
+                .orElseThrow(() -> new NoSuchElementException("Nueva clase no encontrada con ID: " + updateDTO.getNuevaClaseId()));
 
         if (!"activa".equalsIgnoreCase(nuevaClase.getEstado())) {
             throw new ConflictException("La nueva clase seleccionada está inactiva.");
@@ -118,7 +119,7 @@ public class InscripcionService {
     @Transactional
     public void cancelarInscripcion(Long id, Long usuarioId) {
         Inscripcion inscripcion = inscripcionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inscripción no encontrada con ID: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Inscripción no encontrada con ID: " + id));
 
         inscripcionRepository.delete(inscripcion);
     }
@@ -142,7 +143,7 @@ public class InscripcionService {
     @Transactional(readOnly = true)
     public InscripcionResponseDTO obtenerPorId(Long id) {
         Inscripcion inscripcion = inscripcionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Inscripción no encontrada con ID: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Inscripción no encontrada con ID: " + id));
         return mapearADTO(inscripcion, calcularCupoDisponible(inscripcion.getClase()));
     }
 

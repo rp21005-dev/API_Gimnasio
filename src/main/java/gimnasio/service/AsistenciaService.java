@@ -9,9 +9,9 @@ import gimnasio.exception.ConflictException;
 import gimnasio.model.Asistencia;
 import gimnasio.model.Clase;
 import gimnasio.model.Inscripcion;
-import gimnasio.repositoy.AsistenciaRepository;
+import gimnasio.repository.AsistenciaRepository;
 import gimnasio.repository.ClaseRepository;
-import gimnasio.repositoy.InscripcionRepository;
+import gimnasio.repository.InscripcionRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Service
@@ -40,7 +41,7 @@ public class AsistenciaService {
         }
 
         Clase clase = claseRepository.findById(requestDTO.getClaseId())
-                .orElseThrow(() -> new RuntimeException("Clase no encontrada con ID: " + requestDTO.getClaseId()));
+                .orElseThrow(() -> new NoSuchElementException("Clase no encontrada con ID: " + requestDTO.getClaseId()));
 
         if (!"activa".equalsIgnoreCase(clase.getEstado())) {
             throw new ConflictException("La clase está cerrada o inactiva.");
@@ -79,7 +80,7 @@ public class AsistenciaService {
     @Transactional(readOnly = true)
     public HojaAsistenciaResponseDTO obtenerHojaAsistencia(Long claseId, LocalDate fechaSesion) {
         Clase clase = claseRepository.findById(claseId)
-                .orElseThrow(() -> new RuntimeException("Clase no encontrada con ID: " + claseId));
+                .orElseThrow(() -> new NoSuchElementException("Clase no encontrada con ID: " + claseId));
 
         List<Asistencia> asistencias = asistenciaRepository.findByInscripcionClaseIdAndFechaSesion(claseId, fechaSesion);
         return construirHojaResumen(clase, fechaSesion, asistencias);
@@ -102,14 +103,14 @@ public class AsistenciaService {
     @Transactional(readOnly = true)
     public AsistenciaResponseDTO obtenerPorId(Long id) {
         Asistencia asistencia = asistenciaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Registro de asistencia no encontrado con ID: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Registro de asistencia no encontrado con ID: " + id));
         return mapearADTO(asistencia);
     }
 
     @Transactional
     public AsistenciaResponseDTO corregirAsistencia(Long id, AsistenciaUpdateDTO updateDTO, Long usuarioId) {
         Asistencia asistencia = asistenciaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Registro de asistencia no encontrado con ID: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Registro de asistencia no encontrado con ID: " + id));
 
         if (!"activa".equalsIgnoreCase(asistencia.getInscripcion().getEstado())) {
             throw new ConflictException("El historial de asistencia es de solo lectura porque el miembro ya no está inscrito.");
@@ -129,7 +130,7 @@ public class AsistenciaService {
     @Transactional
     public void eliminarAsistencia(Long id, Long usuarioId) {
         Asistencia asistencia = asistenciaRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Registro de asistencia no encontrado con ID: " + id));
+                .orElseThrow(() -> new NoSuchElementException("Registro de asistencia no encontrado con ID: " + id));
 
         if (!"activa".equalsIgnoreCase(asistencia.getInscripcion().getEstado())) {
             throw new ConflictException("El historial de asistencia es de solo lectura.");

@@ -26,6 +26,38 @@
     {
       "key": "claseId",
       "value": ""
+    },
+    {
+      "key": "claseInscripcionId",
+      "value": ""
+    },
+    {
+      "key": "miembroId",
+      "value": ""
+    },
+    {
+      "key": "inscripcionId",
+      "value": ""
+    },
+    {
+      "key": "asistenciaId",
+      "value": ""
+    },
+    {
+      "key": "fechaHoy",
+      "value": ""
+    },
+    {
+      "key": "categoriaId",
+      "value": ""
+    },
+    {
+      "key": "salaId",
+      "value": ""
+    },
+    {
+      "key": "entrenadorId",
+      "value": ""
     }
   ],
   "item": [
@@ -112,7 +144,8 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
-                  "pm.collectionVariables.set(\"token\", pm.response.json().token);"
+                  "pm.collectionVariables.set(\"token\", pm.response.json().token);",
+                  "pm.collectionVariables.set(\"fechaHoy\", new Date().toLocaleDateString(\"en-CA\"));"
                 ]
               }
             }
@@ -143,6 +176,68 @@
       "name": "2. CRUD de clases",
       "item": [
         {
+          "name": "Buscar la categoría de Yoga",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/categorias"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const categoria = pm.response.json().find(c => c.tiposClase.includes(\"Yoga (Hatha, Vinyasa)\"));",
+                  "pm.collectionVariables.set(\"categoriaId\", categoria.id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Buscar la sala Mente y Cuerpo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/salas"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const salas = pm.response.json();",
+                  "pm.collectionVariables.set(\"salaId\", (salas.find(s => s.nombre.includes(\"Mente\")) || salas[0]).id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar entrenadores (guarda el primero)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/entrenador"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"entrenadorId\", pm.response.json()[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
           "name": "Crear clase (201)",
           "request": {
             "method": "POST",
@@ -155,7 +250,7 @@
             "url": "{{baseUrl}}/clases",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipoClase\": \"Yoga\",\n  \"diasSemana\": [\n    \"Martes\",\n    \"Jueves\"\n  ],\n  \"horaInicio\": \"18:00:00\",\n  \"horaFin\": \"19:00:00\",\n  \"fechaInicio\": \"2026-11-03\",\n  \"cupoMaximo\": 15,\n  \"descripcion\": \"Clase de relajación y flexibilidad.\"\n}"
+              "raw": "{\n  \"tipoClase\": \"Yoga (Hatha, Vinyasa)\",\n  \"diasSemana\": [\n    \"Martes\",\n    \"Jueves\"\n  ],\n  \"horaInicio\": \"18:00:00\",\n  \"horaFin\": \"19:00:00\",\n  \"fechaInicio\": \"{{fechaHoy}}\",\n  \"cupoMaximo\": 15,\n  \"descripcion\": \"Clase de relajación y flexibilidad.\",\n  \"categoriaId\": {{categoriaId}},\n  \"salaId\": {{salaId}},\n  \"entrenadorId\": {{entrenadorId}}\n}"
             }
           },
           "event": [
@@ -204,7 +299,7 @@
             "url": "{{baseUrl}}/clases/{{claseId}}",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipoClase\": \"Yoga\",\n  \"diasSemana\": [\n    \"Martes\",\n    \"Jueves\"\n  ],\n  \"horaInicio\": \"18:00:00\",\n  \"horaFin\": \"19:00:00\",\n  \"fechaInicio\": \"2026-11-03\",\n  \"cupoMaximo\": 25,\n  \"descripcion\": \"Clase de relajación y flexibilidad.\",\n  \"estado\": \"CERRADA\"\n}"
+              "raw": "{\n  \"tipoClase\": \"Yoga (Hatha, Vinyasa)\",\n  \"diasSemana\": [\n    \"Martes\",\n    \"Jueves\"\n  ],\n  \"horaInicio\": \"18:00:00\",\n  \"horaFin\": \"19:00:00\",\n  \"fechaInicio\": \"{{fechaHoy}}\",\n  \"cupoMaximo\": 18,\n  \"descripcion\": \"Clase de relajación y flexibilidad.\",\n  \"estado\": \"CERRADA\",\n  \"categoriaId\": {{categoriaId}},\n  \"salaId\": {{salaId}},\n  \"entrenadorId\": {{entrenadorId}}\n}"
             }
           },
           "event": [
@@ -438,6 +533,335 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "5. Inscripciones y asistencias",
+      "item": [
+        {
+          "name": "Crear clase para inscribir (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/clases",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"tipoClase\": \"Pilates (Mat o Reformer)\",\n  \"diasSemana\": [\n    \"Lunes\",\n    \"Miércoles\"\n  ],\n  \"horaInicio\": \"06:00:00\",\n  \"horaFin\": \"07:00:00\",\n  \"fechaInicio\": \"{{fechaHoy}}\",\n  \"cupoMaximo\": 10,\n  \"descripcion\": \"Clase para probar inscripciones.\",\n  \"categoriaId\": {{categoriaId}},\n  \"salaId\": {{salaId}},\n  \"entrenadorId\": {{entrenadorId}}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"claseInscripcionId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar miembro a inscribir (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/miembros",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombres\": \"Luis\",\n  \"apellidos\": \"Pérez\",\n  \"documentoIdentidad\": \"DUI-{{$timestamp}}\",\n  \"correo\": \"luis{{$timestamp}}@ejemplo.com\",\n  \"telefono\": \"7000-5678\",\n  \"fechaNacimiento\": \"2000-05-20\",\n  \"contrasenaHash\": \"clave1234\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"miembroId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inscribir miembro en la clase (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/inscripciones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claseId\": {{claseInscripcionId}},\n  \"miembroId\": {{miembroId}}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"inscripcionId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Inscribir dos veces en la misma clase (409)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/inscripciones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claseId\": {{claseInscripcionId}},\n  \"miembroId\": {{miembroId}}\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar inscripciones del miembro (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/inscripciones?miembroId={{miembroId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener inscripción por ID (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/inscripciones/{{inscripcionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registrar asistencia de la sesión de hoy (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/asistencias",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claseId\": {{claseInscripcionId}},\n  \"fechaSesion\": \"{{fechaHoy}}\",\n  \"registros\": [\n    {\n      \"miembroId\": {{miembroId}},\n      \"estado\": \"presente\"\n    }\n  ]\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"asistenciaId\", pm.response.json().registros[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Hoja de asistencia de la sesión (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/asistencias/clases/{{claseInscripcionId}}/sesiones/{{fechaHoy}}/asistencia"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Corregir asistencia (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/asistencias/{{asistenciaId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"estado\": \"ausente\",\n  \"observacion\": \"Avisó que no vendría\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Listar asistencias de la clase (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/asistencias?claseId={{claseInscripcionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar asistencia (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/asistencias/{{asistenciaId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Cancelar inscripción (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/inscripciones/{{inscripcionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Obtener inscripción cancelada (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/inscripciones/{{inscripcionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar clase de prueba (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/clases/{{claseInscripcionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
                 ]
               }
             }

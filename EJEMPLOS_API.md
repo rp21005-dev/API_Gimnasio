@@ -285,38 +285,34 @@ curl -s -X DELETE "$API/gimnasioAPI/salas/1" -H "$AUTH"
 
 ## Inscripciones
 
-Estas rutas usan el prefijo **`/api`**, no `/gimnasioAPI`.
-
 ```bash
 # Inscribir un miembro a una clase (201)
-curl -s -X POST "$API/api/inscripciones" \
+curl -s -X POST "$API/gimnasioAPI/inscripciones" \
   -H "$AUTH" -H "Content-Type: application/json" \
   -d '{"claseId": 1, "miembroId": 3}'
 
 # Listar (opcional: ?miembroId=3 o ?claseId=1)
-curl -s "$API/api/inscripciones" -H "$AUTH"
+curl -s "$API/gimnasioAPI/inscripciones" -H "$AUTH"
 
 # Obtener una
-curl -s "$API/api/inscripciones/1" -H "$AUTH"
+curl -s "$API/gimnasioAPI/inscripciones/1" -H "$AUTH"
 
 # Cambiar de clase (200)
-curl -s -X PUT "$API/api/inscripciones/1" \
+curl -s -X PUT "$API/gimnasioAPI/inscripciones/1" \
   -H "$AUTH" -H "Content-Type: application/json" \
   -d '{"nuevaClaseId": 2}'
 
 # Cancelar inscripción (204)
-curl -s -X DELETE "$API/api/inscripciones/1" -H "$AUTH"
+curl -s -X DELETE "$API/gimnasioAPI/inscripciones/1" -H "$AUTH"
 ```
 
 ---
 
 ## Asistencias
 
-Estas rutas usan el prefijo **`/api`**, no `/gimnasioAPI`.
-
 ```bash
 # Registrar la asistencia de una sesión (201)
-curl -s -X POST "$API/api/asistencias" \
+curl -s -X POST "$API/gimnasioAPI/asistencias" \
   -H "$AUTH" -H "Content-Type: application/json" \
   -d '{
     "claseId": 1,
@@ -328,21 +324,21 @@ curl -s -X POST "$API/api/asistencias" \
   }'
 
 # Listar (opcional: ?miembroId=3 o ?claseId=1)
-curl -s "$API/api/asistencias" -H "$AUTH"
+curl -s "$API/gimnasioAPI/asistencias" -H "$AUTH"
 
 # Obtener una
-curl -s "$API/api/asistencias/1" -H "$AUTH"
+curl -s "$API/gimnasioAPI/asistencias/1" -H "$AUTH"
 
 # Hoja de asistencia de una sesión
-curl -s "$API/api/asistencias/clases/1/sesiones/2026-11-17/asistencia" -H "$AUTH"
+curl -s "$API/gimnasioAPI/asistencias/clases/1/sesiones/2026-11-17/asistencia" -H "$AUTH"
 
 # Corregir una asistencia (200)
-curl -s -X PUT "$API/api/asistencias/1" \
+curl -s -X PUT "$API/gimnasioAPI/asistencias/1" \
   -H "$AUTH" -H "Content-Type: application/json" \
   -d '{"estado": "AUSENTE", "observacion": "Se retiró temprano"}'
 
 # Eliminar un registro de asistencia (204)
-curl -s -X DELETE "$API/api/asistencias/1" -H "$AUTH"
+curl -s -X DELETE "$API/gimnasioAPI/asistencias/1" -H "$AUTH"
 ```
 
 ---

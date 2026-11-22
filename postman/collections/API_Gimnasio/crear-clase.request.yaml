@@ -9,12 +9,15 @@ body:
   type: json
   content: |
     {
-      "tipoClase": "Yoga",
+      "tipoClase": "Yoga (Hatha, Vinyasa)",
       "diasSemana": ["Martes", "Jueves"],
       "horaInicio": "18:00:00",
       "horaFin": "19:00:00",
-      "fechaInicio": "2026-11-03",
+      "fechaInicio": "2027-01-11",
       "cupoMaximo": 15,
-      "descripcion": "Clase de yoga para principiantes."
+      "descripcion": "Clase de yoga para principiantes.",
+      "categoriaId": 4,
+      "salaId": 3,
+      "entrenadorId": 2
     }
 order: 3000

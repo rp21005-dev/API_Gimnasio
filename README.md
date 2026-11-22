@@ -198,15 +198,13 @@ Ejemplo:
 
 ### Inscripciones
 
-Estas rutas usan el prefijo **`/api`**, no `/gimnasioAPI`.
-
 | Método | Endpoint | Descripción |
 |---|---|---|
-| `POST` | `/api/inscripciones` | Inscribir un miembro a una clase. |
-| `GET` | `/api/inscripciones` | Listar inscripciones (opcional: `?miembroId=` o `?claseId=`). |
-| `GET` | `/api/inscripciones/{id}` | Obtener una inscripción por ID. |
-| `PUT` | `/api/inscripciones/{id}` | Cambiar de clase. |
-| `DELETE` | `/api/inscripciones/{id}` | Cancelar una inscripción. |
+| `POST` | `/gimnasioAPI/inscripciones` | Inscribir un miembro a una clase. |
+| `GET` | `/gimnasioAPI/inscripciones` | Listar inscripciones (opcional: `?miembroId=` o `?claseId=`). |
+| `GET` | `/gimnasioAPI/inscripciones/{id}` | Obtener una inscripción por ID. |
+| `PUT` | `/gimnasioAPI/inscripciones/{id}` | Cambiar de clase. |
+| `DELETE` | `/gimnasioAPI/inscripciones/{id}` | Cancelar una inscripción. |
 
 Ejemplo:
 
@@ -216,16 +214,14 @@ Ejemplo:
 
 ### Asistencias
 
-Estas rutas usan el prefijo **`/api`**, no `/gimnasioAPI`.
-
 | Método | Endpoint | Descripción |
 |---|---|---|
-| `POST` | `/api/asistencias` | Registrar la asistencia de una sesión. |
-| `GET` | `/api/asistencias` | Listar asistencias (opcional: `?miembroId=` o `?claseId=`). |
-| `GET` | `/api/asistencias/{id}` | Obtener una asistencia por ID. |
-| `GET` | `/api/asistencias/clases/{claseId}/sesiones/{fecha}/asistencia` | Hoja de asistencia de una sesión. |
-| `PUT` | `/api/asistencias/{id}` | Corregir una asistencia. |
-| `DELETE` | `/api/asistencias/{id}` | Eliminar un registro de asistencia. |
+| `POST` | `/gimnasioAPI/asistencias` | Registrar la asistencia de una sesión. |
+| `GET` | `/gimnasioAPI/asistencias` | Listar asistencias (opcional: `?miembroId=` o `?claseId=`). |
+| `GET` | `/gimnasioAPI/asistencias/{id}` | Obtener una asistencia por ID. |
+| `GET` | `/gimnasioAPI/asistencias/clases/{claseId}/sesiones/{fecha}/asistencia` | Hoja de asistencia de una sesión. |
+| `PUT` | `/gimnasioAPI/asistencias/{id}` | Corregir una asistencia. |
+| `DELETE` | `/gimnasioAPI/asistencias/{id}` | Eliminar un registro de asistencia. |
 
 Ejemplo:
 

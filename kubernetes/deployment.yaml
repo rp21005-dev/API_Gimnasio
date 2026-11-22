@@ -14,8 +14,10 @@ spec:
     spec:
       containers:
         - name: api-gimnasio
+          # La imagen se construye en local y se carga en el nodo con "kind load docker-image",
+          # por eso nunca se descarga de un registro.
           image: api-gimnasio:1.0
-          imagePullPolicy: IfNotPresent
+          imagePullPolicy: Never
           ports:
             - containerPort: 8080
           readinessProbe:
@@ -53,3 +55,9 @@ spec:
                 secretKeyRef:
                   name: gimnasio-secret
                   key: JWT_SECRET
+
+            - name: DATOS_DEMO
+              valueFrom:
+                configMapKeyRef:
+                  name: gimnasio-config
+                  key: DATOS_DEMO

@@ -43,7 +43,8 @@ El proyecto aplica los temas vistos en la Unidad 6 de la materia: caché con `@C
 | **Lombok** | Generar getters, setters y constructores. |
 | **Gradle** | Compilar y ejecutar el proyecto. |
 | **Docker** | Contenedor de la API y de PostgreSQL para despliegue local. |
-| **GitHub Actions** | Construcción y publicación automática de la imagen en GHCR. |
+| **GitHub Actions + act** | Pipeline CI/CD (pruebas, imagen y despliegue), también ejecutable en local con act. |
+| **Kubernetes (kind) + kubectl** | Despliegue local de la API y PostgreSQL (`kubernetes/`). |
 
 ---
 
@@ -523,17 +524,27 @@ El puerto del host para PostgreSQL es `5433` porque el `5432` del equipo puede e
 
 ---
 
-## 🔄 CI/CD con GitHub Actions
+## 🔄 CI/CD y Kubernetes
 
-El flujo está en `.github/workflows/docker.yml` y tiene dos trabajos:
+El pipeline está en `.github/workflows/ci-cd.yml` y tiene tres trabajos encadenados:
 
-- `build`: construye la imagen con el `Dockerfile` y la publica en **GitHub Container Registry (GHCR)**.
-- `deploy`: levanta un clúster efímero con **kind** en el propio runner, carga la imagen, crea el Secret, despliega PostgreSQL y la API, y prueba el inicio de sesión.
+- `test`: ejecuta las 76 pruebas JUnit (H2 en memoria) y publica los reportes de pruebas y de cobertura.
+- `build`: construye la imagen con el `Dockerfile` y, en GitHub, la publica en **GitHub Container Registry (GHCR)**.
+- `deploy`: carga la imagen en un clúster **kind**, crea el Secret, despliega PostgreSQL y la API, y prueba el inicio de sesión.
 
-### Cuándo se ejecuta
+### Ejecutarlo en local con act (Kubernetes local)
 
-- Push a `main` o a etiquetas `v*`: construye, publica y despliega en kind.
-- Pull request a `main`: solo construye (no publica ni despliega).
+```bash
+./scripts/k8s-cluster.sh      # crea el clúster kind "gimnasio" y .kube-local/config
+./scripts/pipeline-local.sh   # corre test -> build -> deploy con act
+```
+
+La API queda en **http://localhost:30080/gimnasioAPI**. El runner de act recibe la configuración del clúster montando `.kube-local/config`, y el `deployment.yaml` usa `imagePullPolicy: Never` porque la imagen se carga directamente en el nodo. Requisitos, detalles y limpieza: ver [`KUBERNETES.md`](KUBERNETES.md).
+
+### Cuándo se ejecuta en GitHub
+
+- Push a `main` o a etiquetas `v*`: prueba, construye, publica y despliega en un kind efímero.
+- Pull request a `main`: prueba y construye (no publica ni despliega).
 - Ejecución manual desde la pestaña **Actions** (`workflow_dispatch`).
 
 ### Imagen generada
@@ -559,9 +570,9 @@ Para construir y publicar en GHCR no hace falta ningún secreto adicional: se us
 
 ### Despliegue educativo (kind)
 
-El job `deploy`:
+En GitHub, el job `deploy`:
 
-1. Crea un clúster temporal con `helm/kind-action`.
+1. Crea un clúster temporal con `helm/kind-action` (con `kubernetes/kind-config.yaml`).
 2. Construye la imagen `api-gimnasio:1.0` y la carga con `kind load docker-image`.
 3. Crea el Secret `gimnasio-secret` a partir de los GitHub Secrets.
 4. Aplica `kubernetes/configmap.yaml` y `kubernetes/postgres.yaml`, y espera a que PostgreSQL esté listo.
@@ -572,10 +583,11 @@ Los manifiestos están en `kubernetes/`:
 
 | Archivo | Contenido |
 |---|---|
-| `configmap.yaml` | `DB_URL` apuntando al Service `postgres`. |
+| `kind-config.yaml` | Clúster kind `gimnasio`; publica el NodePort `30080` en el equipo. |
+| `configmap.yaml` | `DB_URL` apuntando al Service `postgres` y `DATOS_DEMO`. |
 | `postgres.yaml` | PVC, Deployment y Service de PostgreSQL 16. |
-| `deployment.yaml` | Deployment de la API (imagen `api-gimnasio:1.0`, con sondas de salud). |
-| `service.yaml` | Service `NodePort` en el puerto 8080. |
+| `deployment.yaml` | Deployment de la API (imagen `api-gimnasio:1.0`, `imagePullPolicy: Never`, con sondas de salud). |
+| `service.yaml` | Service `NodePort` (`8080` → `30080`). |
 | `secret.example.yaml` | Plantilla del Secret (no se aplica; el real se crea desde GitHub Secrets). |
 
 ### Despliegue en un clúster real

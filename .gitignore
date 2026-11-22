@@ -14,3 +14,7 @@ logs/
 # IntelliJ IDEA
 .idea/
 *.iml
+
+# Kubernetes local y act (credenciales generadas por los scripts)
+.kube-local/
+.secrets

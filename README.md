@@ -238,13 +238,15 @@ Ejemplo:
 
 ### Probar con Postman
 
-En `postman/collections/API_Gimnasio` hay una colección lista para usar:
+`API_Gimnasio.postman_collection.json` tiene todas las peticiones, organizadas en 5 carpetas (seguridad, clases, miembros, entrenadores, inscripciones y asistencias).
 
-1. Abrir la carpeta `postman/` en la **aplicación de escritorio** de Postman (Windows, macOS o Linux). La versión web no puede llamar a `localhost` sin instalar el Postman Desktop Agent.
-2. Ejecutar **Iniciar sesión** (usa el administrador de demostración). El token se guarda solo en la variable `token` de la colección.
-3. Las demás peticiones heredan ese token, así que no hay que copiarlo a mano. Si pasan 24 horas, volver a ejecutar **Iniciar sesión**.
-
-También está `API_Gimnasio.postman_collection.json` con todas las peticiones (incluidas categorías, salas, inscripciones y asistencias), para importarla con **Import** en cualquier versión de Postman.
+1. En la aplicación de escritorio de Postman, con sesión iniciada, ir a **My Workspace** → **Import** → **files** y elegir el archivo.
+2. En la pestaña **Variables** de la colección, poner en `baseUrl`:
+   - `http://localhost:8080/gimnasioAPI` para la API local (Docker o Gradle).
+   - `http://localhost:30080/gimnasioAPI` para Kubernetes local (kind).
+   - `https://api-production-359d25fa.up.railway.app/gimnasioAPI` para la API publicada en Railway.
+3. Ejecutar **1. Seguridad (JWT) → Iniciar sesión como administrador**. El token se guarda solo en la variable `token` y las demás peticiones lo usan automáticamente. Si pasan 24 horas, volver a iniciar sesión.
+4. Para probar todo de una vez: **⋯** de la colección → **Run collection** → **Run**.
 
 ### Probar con curl
 
@@ -594,3 +596,52 @@ Para apuntar a un clúster real (EKS, GKE, AKS, k3s, etc.):
 2. Cambiar la imagen del `deployment.yaml` a la de GHCR, por ejemplo `ghcr.io/rp21005-dev/api-gimnasio:main`.
 3. Crear un `imagePullSecret` si el paquete de GHCR es privado y referenciarlo en el `Deployment`.
 4. Sustituir el job de kind por un `kubectl apply -f kubernetes/` autenticado con el `KUBE_CONFIG`.
+
+---
+
+## ☁️ Despliegue en Railway
+
+La API y su base de datos PostgreSQL están publicadas en [Railway](https://railway.com):
+
+**URL base:** https://api-production-359d25fa.up.railway.app/gimnasioAPI
+
+```bash
+curl -s -X POST https://api-production-359d25fa.up.railway.app/gimnasioAPI/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"correo":"admin@gimnasio.com","contrasena":"clave1234"}'
+```
+
+**Página web:** https://api-production-359d25fa.up.railway.app/ muestra en el navegador las clases, las categorías y las salas después de iniciar sesión con un usuario de demostración. Es el archivo `src/main/resources/static/index.html` y la sirve la misma API (también en local: http://localhost:8080/).
+
+Para usar la colección de Postman contra Railway, cambiar la variable `baseUrl` de la colección a esa URL.
+
+### Cómo está armado
+
+El proyecto de Railway `api-gimnasio` tiene dos servicios:
+
+| Servicio | Qué es |
+|---|---|
+| `Postgres` | Base de datos PostgreSQL administrada por Railway. Railway genera el usuario y la contraseña. |
+| `api` | La API, construida con el `Dockerfile` del repositorio. |
+
+Variables del servicio `api` (la API se conecta a la base por la red privada de Railway):
+
+| Variable | Valor |
+|---|---|
+| `DB_URL` | `jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}` |
+| `DB_USER` | `${{Postgres.PGUSER}}` |
+| `DB_PASSWORD` | `${{Postgres.PGPASSWORD}}` |
+| `JWT_SECRET` | Clave aleatoria de 96 caracteres (solo está en Railway) |
+| `DATOS_DEMO` | `true`: crea los usuarios de demostración. Cambiar a `false` si la API deja de ser solo para presentar. |
+
+`PORT` lo asigna Railway. El contenedor usa la zona horaria `America/El_Salvador` (definida en el `Dockerfile`) para que "hoy" sea el mismo día que en El Salvador aunque el servidor esté en UTC.
+
+### Volver a desplegar
+
+Con el [CLI de Railway](https://docs.railway.com/guides/cli) y acceso al proyecto:
+
+```bash
+railway login
+railway link --project api-gimnasio
+railway up --service api
+```

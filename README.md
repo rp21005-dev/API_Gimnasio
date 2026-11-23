@@ -594,3 +594,50 @@ Para apuntar a un clúster real (EKS, GKE, AKS, k3s, etc.):
 2. Cambiar la imagen del `deployment.yaml` a la de GHCR, por ejemplo `ghcr.io/rp21005-dev/api-gimnasio:main`.
 3. Crear un `imagePullSecret` si el paquete de GHCR es privado y referenciarlo en el `Deployment`.
 4. Sustituir el job de kind por un `kubectl apply -f kubernetes/` autenticado con el `KUBE_CONFIG`.
+
+---
+
+## ☁️ Despliegue en Railway
+
+La API y su base de datos PostgreSQL están publicadas en [Railway](https://railway.com):
+
+**URL base:** https://api-production-359d25fa.up.railway.app/gimnasioAPI
+
+```bash
+curl -s -X POST https://api-production-359d25fa.up.railway.app/gimnasioAPI/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"correo":"admin@gimnasio.com","contrasena":"clave1234"}'
+```
+
+Para usar la colección de Postman contra Railway, cambiar la variable `baseUrl` de la colección a esa URL.
+
+### Cómo está armado
+
+El proyecto de Railway `api-gimnasio` tiene dos servicios:
+
+| Servicio | Qué es |
+|---|---|
+| `Postgres` | Base de datos PostgreSQL administrada por Railway. Railway genera el usuario y la contraseña. |
+| `api` | La API, construida con el `Dockerfile` del repositorio. |
+
+Variables del servicio `api` (la API se conecta a la base por la red privada de Railway):
+
+| Variable | Valor |
+|---|---|
+| `DB_URL` | `jdbc:postgresql://${{Postgres.PGHOST}}:${{Postgres.PGPORT}}/${{Postgres.PGDATABASE}}` |
+| `DB_USER` | `${{Postgres.PGUSER}}` |
+| `DB_PASSWORD` | `${{Postgres.PGPASSWORD}}` |
+| `JWT_SECRET` | Clave aleatoria de 96 caracteres (solo está en Railway) |
+| `DATOS_DEMO` | `true`: crea los usuarios de demostración. Cambiar a `false` si la API deja de ser solo para presentar. |
+
+`PORT` lo asigna Railway. El contenedor usa la zona horaria `America/El_Salvador` (definida en el `Dockerfile`) para que "hoy" sea el mismo día que en El Salvador aunque el servidor esté en UTC.
+
+### Volver a desplegar
+
+Con el [CLI de Railway](https://docs.railway.com/guides/cli) y acceso al proyecto:
+
+```bash
+railway login
+railway link --project api-gimnasio
+railway up --service api
+```

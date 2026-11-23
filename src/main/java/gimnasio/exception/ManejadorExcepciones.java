@@ -4,6 +4,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -50,5 +52,17 @@ public class ManejadorExcepciones {
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> argumentoInvalido(IllegalArgumentException e) {
         return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    }
+
+    // 400: el cuerpo no es un JSON válido o un campo tiene un tipo incorrecto
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> jsonInvalido(HttpMessageNotReadableException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", "El cuerpo de la petición no es un JSON válido o tiene datos con formato incorrecto"));
+    }
+
+    // 403: el usuario tiene sesión, pero no puede acceder a ese registro (ej. inscripción de otro miembro)
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> accesoDenegado(AccessDeniedException e) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(Map.of("error", e.getMessage()));
     }
 }

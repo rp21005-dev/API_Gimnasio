@@ -4,6 +4,7 @@ import gimnasio.dto.AsistenciaRequestDTO;
 import gimnasio.dto.AsistenciaResponseDTO;
 import gimnasio.dto.AsistenciaUpdateDTO;
 import gimnasio.dto.HojaAsistenciaResponseDTO;
+import gimnasio.security.UsuarioAutenticado;
 import gimnasio.service.AsistenciaService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -44,6 +45,11 @@ public class AsistenciaController {
     public ResponseEntity<List<AsistenciaResponseDTO>> listarAsistencias(
             @RequestParam(required = false) Long miembroId,
             @RequestParam(required = false) Long claseId) {
+        // El miembro solo ve su propio historial
+        Long miembroAutenticado = UsuarioAutenticado.miembroId();
+        if (miembroAutenticado != null) {
+            miembroId = miembroAutenticado;
+        }
         List<AsistenciaResponseDTO> lista = asistenciaService.obtenerAsistencias(miembroId, claseId);
         return ResponseEntity.ok(lista);
     }
@@ -52,6 +58,7 @@ public class AsistenciaController {
     @GetMapping("/{id}")
     public ResponseEntity<AsistenciaResponseDTO> obtenerPorId(@PathVariable Long id) {
         AsistenciaResponseDTO detalle = asistenciaService.obtenerPorId(id);
+        UsuarioAutenticado.verificarQueSeaSuyo(detalle.getMiembroId());
         return ResponseEntity.ok(detalle);
     }
 

@@ -35,7 +35,7 @@ class EntrenadorControllerIntegrationTest {
             """;
 
     @Test
-    @WithMockUser(username = "admin") // Simula un usuario autenticado
+    @WithMockUser(username = "admin", roles = "ADMINISTRADOR") // Simula un usuario autenticado
     @DisplayName("POST /gimnasioAPI/entrenador debe crear un entrenador y retornar 201 Created")
     void crearEntrenador_Exito() throws Exception {
         mockMvc.perform(post("/gimnasioAPI/entrenador")
@@ -48,7 +48,7 @@ class EntrenadorControllerIntegrationTest {
     }
 
     @Test
-    @WithMockUser(username = "admin")
+    @WithMockUser(username = "admin", roles = "ADMINISTRADOR")
     @DisplayName("POST con datos inválidos debe retornar 400 Bad Request")
     void crearEntrenador_DatosInvalidos() throws Exception {
         mockMvc.perform(post("/gimnasioAPI/entrenador")

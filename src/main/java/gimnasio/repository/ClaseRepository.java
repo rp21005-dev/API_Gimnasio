@@ -17,6 +17,9 @@ public interface ClaseRepository extends JpaRepository<Clase, Long> {
     // Para impedir eliminar categorías, salas o entrenadores con clases activas
     boolean existsByCategoriaIdAndEstado(Long categoriaId, String estado);
 
+    // Para no duplicar las clases de demostración
+    boolean existsByTipoClase(String tipoClase);
+
     boolean existsBySalaIdAndEstado(Long salaId, String estado);
 
     boolean existsByEntrenadorIdAndEstado(Long entrenadorId, String estado);

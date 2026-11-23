@@ -82,7 +82,7 @@ Ejemplo:
 Respuesta:
 
 ```json
-{ "token": "eyJhbGciOi...", "rol": "ENTRENADOR" }
+{ "token": "eyJhbGciOi...", "rol": "ENTRENADOR", "id": "2" }
 ```
 
 Para los demás endpoints se debe enviar el token en la cabecera:
@@ -90,6 +90,23 @@ Para los demás endpoints se debe enviar el token en la cabecera:
 ```
 Authorization: Bearer <token>
 ```
+
+### Permisos por rol
+
+El token guarda el ID y el rol del usuario. Las reglas están en `SecurityConfig`:
+
+| Recurso | Consultar (`GET`) | Crear, modificar o eliminar |
+|---|---|---|
+| Administradores | Administrador | Administrador |
+| Miembros | Administrador, entrenador | Administrador (el registro `POST` es público) |
+| Entrenadores | Todos | Administrador |
+| Categorías y salas | Todos | Administrador |
+| Clases | Todos | Administrador, entrenador |
+| Inscripciones | Todos (el miembro solo ve las suyas) | Administrador, miembro (el miembro solo se inscribe a sí mismo y solo cambia o cancela las suyas) |
+| Asistencias | Todos (el miembro solo ve las suyas) | Administrador, entrenador |
+| Hoja de asistencia de una sesión | Administrador, entrenador | — |
+
+Sin token la API responde `401`. Con token, pero sin el rol necesario, o al intentar ver un registro de otro miembro, responde `403`.
 
 ### Administradores
 
@@ -326,15 +343,15 @@ Los servicios usan `@Slf4j` para registrar eventos con distintos niveles:
 Los logs se muestran en consola y también se guardan en `logs/gimnasio.log`.
 
 ### Spring Security y JWT
-El usuario inicia sesión con su correo y contraseña, y la API devuelve un token firmado que dura 24 horas. Un filtro revisa el token en cada petición; si no es válido, la API responde `401`.
+El usuario inicia sesión con su correo y contraseña, y la API devuelve un token firmado que dura 24 horas con su ID y su rol. Un filtro revisa el token en cada petición: sin token válido la API responde `401`, y si el rol no tiene permiso responde `403` (ver [Permisos por rol](#permisos-por-rol)).
 
 ### Pruebas y cobertura
-76 pruebas con JUnit 5, todas en verde. Se ejecutan sobre una base de datos **H2 en memoria** (configurada en `src/test/resources/application.properties`), así que no necesitan PostgreSQL ni el archivo `.env` y pasan igual en cualquier equipo y en el pipeline.
+84 pruebas con JUnit 5, todas en verde. Se ejecutan sobre una base de datos **H2 en memoria** (configurada en `src/test/resources/application.properties`), así que no necesitan PostgreSQL ni el archivo `.env` y pasan igual en cualquier equipo y en el pipeline.
 
 | Tipo | Clases | Qué prueban |
 |---|---|---|
 | **Unitarias** (JUnit 5 + Mockito, sin base de datos) | `EntrenadorServiceTest`, `CategoriaServiceTest`, `SalaServiceTest`, `ClaseServiceTest`, `InscripcionServiceTest`, `AsistenciaServiceTest` | Reglas de negocio de cada servicio: duplicados, días y horarios, cupo vs. capacidad de la sala, traslapes, estado del miembro/clase, historial de solo lectura. |
-| **Integración** (`@SpringBootTest` + MockMvc) | `EntrenadorControllerIntegrationTest`, `AuthControllerIntegrationTest`, `FlujoGimnasioIntegrationTest` | Login real con JWT por rol, `401` sin token, y el flujo completo categoría → sala → clase → inscripción → asistencia con los códigos `201`, `400`, `404` y `409`. |
+| **Integración** (`@SpringBootTest` + MockMvc) | `EntrenadorControllerIntegrationTest`, `AuthControllerIntegrationTest`, `FlujoGimnasioIntegrationTest`, `RolesIntegrationTest` | Login real con JWT por rol, `401` sin token, `403` por rol o por registros de otro miembro, y el flujo completo categoría → sala → clase → inscripción → asistencia con los códigos `201`, `400`, `404` y `409`. |
 
 - **JaCoCo**: genera el reporte de cobertura en `build/reports/jacoco/test/html/index.html` (≈79 % de instrucciones).
 
@@ -418,13 +435,16 @@ gradlew.bat bootRun
 
 La API queda disponible en `http://localhost:8080`.
 
-Al iniciar, si las tablas están vacías, se crean estos usuarios de demostración (todos con la contraseña `clave1234`), un catálogo de 6 categorías, 3 salas y una clase de ejemplo (Spinning):
+Al iniciar se crean, si no existen, estos usuarios de demostración (todos con la contraseña `clave1234`), un catálogo de 6 categorías, 3 salas, un horario de 6 clases y algunas inscripciones:
 
-| Rol | Correo |
-|---|---|
-| Administrador | `admin@gimnasio.com` |
-| Entrenador | `entrenador@gimnasio.com` |
-| Miembro | `miembro@gimnasio.com` |
+| Rol | Correo | Nombre |
+|---|---|---|
+| Administrador | `admin@gimnasio.com` | — |
+| Entrenador | `entrenador@gimnasio.com` | Carlos Martínez |
+| Entrenador | `entrenadora@gimnasio.com` | Ana López |
+| Miembro | `miembro@gimnasio.com` | Juan Pérez |
+| Miembro | `maria@gimnasio.com` | María Hernández |
+| Miembro | `pedro@gimnasio.com` | Pedro Ramírez |
 
 > Son solo para pruebas locales. Cambiar o eliminar estas cuentas si la API se usa fuera del entorno local.
 
@@ -526,7 +546,7 @@ El puerto del host para PostgreSQL es `5433` porque el `5432` del equipo puede e
 
 El pipeline está en `.github/workflows/ci-cd.yml` y tiene tres trabajos encadenados:
 
-- `test`: ejecuta las 76 pruebas JUnit (H2 en memoria) y publica los reportes de pruebas y de cobertura.
+- `test`: ejecuta las 84 pruebas JUnit (H2 en memoria) y publica los reportes de pruebas y de cobertura.
 - `build`: construye la imagen con el `Dockerfile` y, en GitHub, la publica en **GitHub Container Registry (GHCR)**.
 - `deploy`: carga la imagen en un clúster **kind**, crea el Secret, despliega PostgreSQL y la API, y prueba el inicio de sesión.
 

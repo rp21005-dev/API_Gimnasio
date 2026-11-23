@@ -29,7 +29,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @Transactional
-@WithMockUser(username = "admin")
+@WithMockUser(username = "admin", roles = "ADMINISTRADOR")
 class FlujoGimnasioIntegrationTest {
 
     private static final String HOY = LocalDate.now().toString();

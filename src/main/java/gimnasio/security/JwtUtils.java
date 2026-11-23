@@ -27,9 +27,11 @@ public class JwtUtils {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
-    public String generarToken(String correo, String rol) {
+    // El token lleva el ID del usuario para saber quién hace cada petición
+    public String generarToken(Long id, String correo, String rol) {
         return Jwts.builder()
                 .subject(correo)
+                .claim("id", id)
                 .claim("rol", rol)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))

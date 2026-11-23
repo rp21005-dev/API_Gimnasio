@@ -4,6 +4,7 @@ import gimnasio.model.Administrador;
 import gimnasio.model.Categoria;
 import gimnasio.model.Clase;
 import gimnasio.model.Entrenador;
+import gimnasio.model.Inscripcion;
 import gimnasio.model.Miembro;
 import gimnasio.model.Sala;
 import gimnasio.repository.AdministradorRepository;
@@ -11,6 +12,7 @@ import gimnasio.repository.CategoriaRepository;
 import gimnasio.repository.ClaseRepository;
 import gimnasio.repository.EntrenadorRepository;
 import gimnasio.repository.MiembroRepository;
+import gimnasio.repository.InscripcionRepository;
 import gimnasio.repository.SalaRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -39,6 +41,7 @@ public class DataInitializer {
             ClaseRepository claseRepository,
             CategoriaRepository categoriaRepository,
             SalaRepository salaRepository,
+            InscripcionRepository inscripcionRepository,
             PasswordEncoder passwordEncoder) {
 
         return args -> {
@@ -129,38 +132,106 @@ public class DataInitializer {
                 ));
             }
 
-            // ---------- Clase de ejemplo (con categoría, sala y entrenador) ----------
-            if (claseRepository.count() == 0) {
-                Categoria categoria = categoriaRepository.findAll().stream()
-                        .filter(c -> c.getNombre().equals("Cardiovasculares (Cardio)"))
-                        .findFirst().orElse(null);
-                Sala sala = salaRepository.findAll().stream()
-                        .filter(s -> s.getCodigo().equals("S-01"))
-                        .findFirst().orElse(null);
-                Entrenador entrenador = entrenadorRepository.findByCorreo("entrenador@gimnasio.com").orElse(null);
+            // ---------- Más usuarios de demostración (solo si no existen) ----------
+            if (entrenadorRepository.findByCorreo("entrenadora@gimnasio.com").isEmpty()) {
+                Entrenador entrenadora = new Entrenador();
+                entrenadora.setCorreo("entrenadora@gimnasio.com");
+                entrenadora.setContrasenaHash(passwordEncoder.encode(CONTRASENA_DEMO));
+                entrenadora.setEstado("ACTIVO");
+                entrenadora.setNombres("Ana");
+                entrenadora.setApellidos("López");
+                entrenadora.setTelefono("7000-3333");
+                entrenadora.setEspecialidad("Yoga y pilates");
+                entrenadorRepository.save(entrenadora);
+            }
+            miembroDemo(miembroRepository, passwordEncoder, "maria@gimnasio.com", "María", "Hernández", "23456789-0", LocalDate.of(1998, 8, 21));
+            miembroDemo(miembroRepository, passwordEncoder, "pedro@gimnasio.com", "Pedro", "Ramírez", "34567890-1", LocalDate.of(2002, 2, 3));
 
-                // Solo se crea si existen las tres relaciones
-                if (categoria != null && sala != null && entrenador != null) {
+            // ---------- Horario de clases (sin choques de sala ni de entrenador) ----------
+            Entrenador carlos = entrenadorRepository.findByCorreo("entrenador@gimnasio.com").orElse(null);
+            Entrenador ana = entrenadorRepository.findByCorreo("entrenadora@gimnasio.com").orElse(null);
+            if (carlos != null && ana != null && categoriaRepository.count() > 0 && salaRepository.count() > 0) {
+                ClaseDemo[] horario = {
+                        new ClaseDemo("Spinning / Indoor cycling", "Cardiovasculares (Cardio)", "S-01", carlos,
+                                List.of("Lunes", "Miércoles", "Viernes"), 8, 0, 9, 0, 20, "Clase de cardio en bicicleta fija."),
+                        new ClaseDemo("Zumba", "Cardiovasculares (Cardio)", "S-02", carlos,
+                                List.of("Martes", "Jueves"), 18, 0, 19, 0, 25, "Baile aeróbico con ritmos latinos."),
+                        new ClaseDemo("BodyPump", "Fuerza y Resistencia Muscular", "S-02", carlos,
+                                List.of("Lunes", "Miércoles", "Viernes"), 18, 0, 19, 0, 20, "Trabajo con barra y discos para todo el cuerpo."),
+                        new ClaseDemo("Yoga (Hatha, Vinyasa)", "Mente y Cuerpo (Bajo Impacto)", "S-03", ana,
+                                List.of("Lunes", "Miércoles"), 7, 0, 8, 0, 15, "Posturas, respiración y relajación."),
+                        new ClaseDemo("Pilates (Mat o Reformer)", "Mente y Cuerpo (Bajo Impacto)", "S-03", ana,
+                                List.of("Martes", "Jueves"), 7, 0, 8, 0, 12, "Fortalecimiento del core y postura."),
+                        new ClaseDemo("Kickboxing fitness", "Combate y Artes Marciales", "S-02", ana,
+                                List.of("Sábado"), 10, 0, 11, 30, 20, "Golpes y patadas al ritmo de la música."),
+                };
+                for (ClaseDemo demo : horario) {
+                    if (claseRepository.existsByTipoClase(demo.tipo())) continue;
+                    Categoria categoria = categoriaRepository.findAll().stream()
+                            .filter(c -> c.getNombre().equals(demo.categoria())).findFirst().orElse(null);
+                    Sala sala = salaRepository.findAll().stream()
+                            .filter(x -> x.getCodigo().equals(demo.sala())).findFirst().orElse(null);
+                    if (categoria == null || sala == null) continue;
+
                     Clase clase = new Clase();
-
-                    // El tipo debe ser uno de los tipos de la categoría
-                    clase.setTipoClase("Spinning / Indoor cycling");
-                    clase.setDiasSemana(List.of("Lunes", "Miércoles", "Viernes"));
-                    clase.setHoraInicio(LocalTime.of(8, 0));
-                    clase.setHoraFin(LocalTime.of(9, 0));
+                    clase.setTipoClase(demo.tipo()); // debe ser uno de los tipos de la categoría
+                    clase.setDiasSemana(new ArrayList<>(demo.dias()));
+                    clase.setHoraInicio(LocalTime.of(demo.horaInicio(), demo.minutoInicio()));
+                    clase.setHoraFin(LocalTime.of(demo.horaFin(), demo.minutoFin()));
                     clase.setFechaInicio(LocalDate.of(2026, 11, 2));
-                    clase.setCupoMaximo(20); // no supera la capacidad de la sala (25)
-                    clase.setDescripcion("Clase de cardio en bicicleta fija.");
+                    clase.setCupoMaximo(demo.cupo()); // no supera la capacidad de la sala
+                    clase.setDescripcion(demo.descripcion());
                     clase.setEstado("ACTIVA");
-
                     clase.setCategoria(categoria);
                     clase.setSala(sala);
-                    clase.setEntrenador(entrenador);
-
+                    clase.setEntrenador(demo.entrenador());
                     claseRepository.save(clase);
                 }
             }
+
+            // ---------- Inscripciones de ejemplo (sin traslapes por miembro) ----------
+            if (inscripcionRepository.count() == 0) {
+                inscribir(inscripcionRepository, miembroRepository, claseRepository, "miembro@gimnasio.com", "Yoga (Hatha, Vinyasa)");
+                inscribir(inscripcionRepository, miembroRepository, claseRepository, "miembro@gimnasio.com", "Zumba");
+                inscribir(inscripcionRepository, miembroRepository, claseRepository, "maria@gimnasio.com", "Pilates (Mat o Reformer)");
+                inscribir(inscripcionRepository, miembroRepository, claseRepository, "maria@gimnasio.com", "Spinning / Indoor cycling");
+                inscribir(inscripcionRepository, miembroRepository, claseRepository, "pedro@gimnasio.com", "BodyPump");
+                inscribir(inscripcionRepository, miembroRepository, claseRepository, "pedro@gimnasio.com", "Kickboxing fitness");
+            }
         };
+    }
+
+    // Datos de una clase del horario de demostración
+    private record ClaseDemo(String tipo, String categoria, String sala, Entrenador entrenador, List<String> dias,
+                             int horaInicio, int minutoInicio, int horaFin, int minutoFin, int cupo, String descripcion) {
+    }
+
+    // Crea un miembro de demostración si su correo no existe
+    private void miembroDemo(MiembroRepository repo, PasswordEncoder encoder, String correo, String nombres,
+                             String apellidos, String documento, LocalDate nacimiento) {
+        if (repo.findByCorreo(correo).isPresent()) return;
+        Miembro m = new Miembro();
+        m.setCorreo(correo);
+        m.setContrasenaHash(encoder.encode(CONTRASENA_DEMO));
+        m.setEstado("ACTIVO");
+        m.setNombres(nombres);
+        m.setApellidos(apellidos);
+        m.setDocumentoIdentidad(documento);
+        m.setTelefono("7000-4444");
+        m.setFechaNacimiento(nacimiento);
+        m.setFechaRegistro(LocalDate.now());
+        repo.save(m);
+    }
+
+    // Inscribe a un miembro de demostración en la clase con ese tipo
+    private void inscribir(InscripcionRepository inscripciones, MiembroRepository miembros,
+                           ClaseRepository clases, String correo, String tipoClase) {
+        Miembro miembro = miembros.findByCorreo(correo).orElse(null);
+        Clase clase = clases.findAll().stream()
+                .filter(c -> c.getTipoClase().equals(tipoClase)).findFirst().orElse(null);
+        if (miembro != null && clase != null) {
+            inscripciones.save(new Inscripcion(miembro, clase, LocalDate.of(2026, 11, 2), "activa"));
+        }
     }
 
     // Crea una categoría con su lista de tipos de clase

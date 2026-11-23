@@ -3,7 +3,7 @@
 El pipeline `.github/workflows/ci-cd.yml` se ejecuta en local con [act](https://github.com/nektos/act) y despliega la API en un clúster de Kubernetes local creado con [kind](https://kind.sigs.k8s.io/):
 
 ```
-act ──► test (JUnit, 76 pruebas) ──► build (docker build api-gimnasio:1.0) ──► deploy (kubectl → kind)
+act ──► test (JUnit, 84 pruebas) ──► build (docker build api-gimnasio:1.0) ──► deploy (kubectl → kind)
                                                                                │
                          .kube-local/config ──(montado en el runner)───────────┘
 ```

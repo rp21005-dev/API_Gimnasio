@@ -58,6 +58,26 @@
     {
       "key": "entrenadorId",
       "value": ""
+    },
+    {
+      "key": "miembroRegistradoId",
+      "value": ""
+    },
+    {
+      "key": "entrenadorRegistradoId",
+      "value": ""
+    },
+    {
+      "key": "tokenMiembro",
+      "value": ""
+    },
+    {
+      "key": "claseParaMiembroId",
+      "value": ""
+    },
+    {
+      "key": "inscripcionMiembroId",
+      "value": ""
     }
   ],
   "item": [
@@ -250,7 +270,7 @@
             "url": "{{baseUrl}}/clases",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipoClase\": \"Yoga (Hatha, Vinyasa)\",\n  \"diasSemana\": [\n    \"Martes\",\n    \"Jueves\"\n  ],\n  \"horaInicio\": \"18:00:00\",\n  \"horaFin\": \"19:00:00\",\n  \"fechaInicio\": \"{{fechaHoy}}\",\n  \"cupoMaximo\": 15,\n  \"descripcion\": \"Clase de relajación y flexibilidad.\",\n  \"categoriaId\": {{categoriaId}},\n  \"salaId\": {{salaId}},\n  \"entrenadorId\": {{entrenadorId}}\n}"
+              "raw": "{\n  \"tipoClase\": \"Yoga (Hatha, Vinyasa)\",\n  \"diasSemana\": [\n    \"Domingo\"\n  ],\n  \"horaInicio\": \"09:00:00\",\n  \"horaFin\": \"10:00:00\",\n  \"fechaInicio\": \"{{fechaHoy}}\",\n  \"cupoMaximo\": 15,\n  \"descripcion\": \"Clase de relajación y flexibilidad.\",\n  \"categoriaId\": {{categoriaId}},\n  \"salaId\": {{salaId}},\n  \"entrenadorId\": {{entrenadorId}}\n}"
             }
           },
           "event": [
@@ -299,7 +319,7 @@
             "url": "{{baseUrl}}/clases/{{claseId}}",
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"tipoClase\": \"Yoga (Hatha, Vinyasa)\",\n  \"diasSemana\": [\n    \"Martes\",\n    \"Jueves\"\n  ],\n  \"horaInicio\": \"18:00:00\",\n  \"horaFin\": \"19:00:00\",\n  \"fechaInicio\": \"{{fechaHoy}}\",\n  \"cupoMaximo\": 18,\n  \"descripcion\": \"Clase de relajación y flexibilidad.\",\n  \"estado\": \"CERRADA\",\n  \"categoriaId\": {{categoriaId}},\n  \"salaId\": {{salaId}},\n  \"entrenadorId\": {{entrenadorId}}\n}"
+              "raw": "{\n  \"tipoClase\": \"Yoga (Hatha, Vinyasa)\",\n  \"diasSemana\": [\n    \"Domingo\"\n  ],\n  \"horaInicio\": \"09:00:00\",\n  \"horaFin\": \"10:00:00\",\n  \"fechaInicio\": \"{{fechaHoy}}\",\n  \"cupoMaximo\": 18,\n  \"descripcion\": \"Clase de relajación y flexibilidad.\",\n  \"estado\": \"CERRADA\",\n  \"categoriaId\": {{categoriaId}},\n  \"salaId\": {{salaId}},\n  \"entrenadorId\": {{entrenadorId}}\n}"
             }
           },
           "event": [
@@ -411,7 +431,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));"
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"miembroRegistradoId\", pm.response.json().id);"
                 ]
               }
             }
@@ -466,6 +487,25 @@
               }
             }
           ]
+        },
+        {
+          "name": "Eliminar miembro registrado (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/miembros/{{miembroRegistradoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
         }
       ]
     },
@@ -494,7 +534,8 @@
               "script": {
                 "type": "text/javascript",
                 "exec": [
-                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));"
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"entrenadorRegistradoId\", pm.response.json().id);"
                 ]
               }
             }
@@ -533,6 +574,25 @@
                 "type": "text/javascript",
                 "exec": [
                   "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar entrenador registrado (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/entrenador/{{entrenadorRegistradoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
                 ]
               }
             }
@@ -854,6 +914,288 @@
             "method": "DELETE",
             "header": [],
             "url": "{{baseUrl}}/clases/{{claseInscripcionId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Eliminar miembro de prueba (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/miembros/{{miembroId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "6. Permisos por rol",
+      "description": "El miembro de demostración consulta el catálogo y se inscribe a sí mismo, pero no puede gestionar usuarios ni catálogos (403).",
+      "item": [
+        {
+          "name": "Iniciar sesión como miembro",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/auth/login",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"correo\": \"miembro@gimnasio.com\",\n  \"contrasena\": \"clave1234\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"tokenMiembro\", pm.response.json().token);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Miembro consulta las clases (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/clases",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMiembro}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "pm.collectionVariables.set(\"claseParaMiembroId\", pm.response.json()[0].id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Miembro NO puede ver administradores (403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/administrador",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMiembro}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Miembro NO puede listar miembros (403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/miembros",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMiembro}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Miembro NO puede crear salas (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/salas",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"codigo\": \"S-99\",\n  \"nombre\": \"Sala no permitida\",\n  \"ubicacion\": \"—\",\n  \"capacidadMaxima\": 10\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMiembro}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 403\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Miembro se inscribe a sí mismo (201)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/inscripciones",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"claseId\": {{claseParaMiembroId}}\n}"
+            },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMiembro}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 201\", () => pm.response.to.have.status(201));",
+                  "pm.collectionVariables.set(\"inscripcionMiembroId\", pm.response.json().id);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Miembro ve solo sus inscripciones (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/inscripciones",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMiembro}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Responde 200\", () => pm.response.to.have.status(200));",
+                  "const propias = pm.response.json();",
+                  "pm.test(\"Todas son del mismo miembro\", () => pm.expect(new Set(propias.map(i => i.miembroId)).size).to.eql(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Miembro cancela su inscripción (204)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/inscripciones/{{inscripcionMiembroId}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenMiembro}}",
+                  "type": "string"
+                }
+              ]
+            }
           },
           "event": [
             {

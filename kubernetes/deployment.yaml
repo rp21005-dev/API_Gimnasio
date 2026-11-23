@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gimnasio
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api-gimnasio
+  template:
+    metadata:
+      labels:
+        app: api-gimnasio
+    spec:
+      containers:
+        - name: api-gimnasio
+          # La imagen se construye en local y se carga en el nodo con "kind load docker-image",
+          # por eso nunca se descarga de un registro.
+          image: api-gimnasio:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 15
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 15
+
+          env:
+            - name: DB_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: gimnasio-config
+                  key: DB_URL
+
+            - name: DB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: gimnasio-secret
+                  key: DB_USER
+
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: gimnasio-secret
+                  key: DB_PASSWORD
+
+            - name: JWT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: gimnasio-secret
+                  key: JWT_SECRET
+
+            - name: DATOS_DEMO
+              valueFrom:
+                configMapKeyRef:
+                  name: gimnasio-config
+                  key: DATOS_DEMO

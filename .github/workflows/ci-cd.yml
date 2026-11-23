@@ -1,0 +1,219 @@
+name: "CI/CD: pruebas, imagen y despliegue en Kubernetes"
+
+# El mismo pipeline corre en dos lugares:
+#  - En GitHub Actions: publica la imagen en GHCR y despliega en un clúster kind efímero.
+#  - En local con act (./scripts/pipeline-local.sh): despliega en el clúster kind local
+#    usando el kubeconfig de .kube-local/config que se monta en el runner.
+# act define la variable ACT=true; los pasos marcados con env.ACT solo corren en local.
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  # GHCR requiere nombres en minúsculas; github.repository_owner ya lo es.
+  IMAGE: ghcr.io/${{ github.repository_owner }}/api-gimnasio
+  LOCAL_IMAGE: api-gimnasio:1.0
+  KIND_CLUSTER: gimnasio
+  KIND_VERSION: v0.33.0
+  KUBECTL_VERSION: v1.37.2
+
+jobs:
+  # 1. Pruebas unitarias y de integración (JUnit + H2 en memoria) con reporte de JaCoCo
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Instalar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - name: Ejecutar las pruebas
+        run: |
+          chmod +x gradlew
+          ./gradlew test --no-daemon
+
+      - name: Resumen de las pruebas
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, re
+          t = f = e = 0
+          for x in glob.glob("build/test-results/test/*.xml"):
+              h = open(x, encoding="utf-8").read(2000)
+              t += int(re.search(r'tests="(\d+)"', h).group(1))
+              f += int(re.search(r'failures="(\d+)"', h).group(1))
+              e += int(re.search(r'errors="(\d+)"', h).group(1))
+          print(f"Pruebas: {t}  Fallidas: {f}  Errores: {e}  Exitosas: {t - f - e}")
+          PY
+
+      - name: Publicar reportes de pruebas y cobertura
+        if: ${{ always() && !env.ACT }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: reportes-pruebas
+          path: |
+            build/reports/tests/test
+            build/reports/jacoco/test/html
+
+  # 2. Imagen de Docker
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # --- En local (act): la imagen queda en el Docker del equipo para cargarla en kind ---
+      - name: Construir la imagen local
+        if: ${{ env.ACT }}
+        run: docker build -t "$LOCAL_IMAGE" .
+
+      # --- En GitHub: construir y publicar en GHCR ---
+      - name: Set up Buildx
+        if: ${{ !env.ACT }}
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: ${{ !env.ACT && github.event_name != 'pull_request' }}
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Docker metadata
+        if: ${{ !env.ACT }}
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short
+
+      - name: Build and push
+        if: ${{ !env.ACT }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # 3. Despliegue en Kubernetes
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: github.event_name != 'pull_request'
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # --- En local (act): usar el clúster kind del equipo ---
+      - name: Conectar con el clúster local (.kube-local/config)
+        if: ${{ env.ACT }}
+        run: |
+          if [ ! -f /kube-local/config ]; then
+            echo "::error::No se encontró /kube-local/config. Ejecuta ./scripts/k8s-cluster.sh y luego ./scripts/pipeline-local.sh"
+            exit 1
+          fi
+          echo "KUBECONFIG=/kube-local/config" >> "$GITHUB_ENV"
+          mkdir -p "$HOME/.local/bin"
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+          if ! command -v kind >/dev/null; then
+            curl -fsSLo "$HOME/.local/bin/kind" "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-amd64"
+            chmod +x "$HOME/.local/bin/kind"
+          fi
+          if ! command -v kubectl >/dev/null; then
+            curl -fsSLo "$HOME/.local/bin/kubectl" "https://dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl"
+            chmod +x "$HOME/.local/bin/kubectl"
+          fi
+
+      # --- En GitHub: clúster kind efímero dentro del runner ---
+      - name: Crear clúster efímero con kind
+        if: ${{ !env.ACT }}
+        uses: helm/kind-action@v1
+        with:
+          cluster_name: ${{ env.KIND_CLUSTER }}
+          config: kubernetes/kind-config.yaml
+
+      - name: Construir la imagen
+        if: ${{ !env.ACT }}
+        run: docker build -t "$LOCAL_IMAGE" .
+
+      - name: Verificar el clúster
+        run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      # imagePullPolicy: Never -> la imagen debe estar cargada en el nodo
+      - name: Cargar la imagen en kind
+        run: kind load docker-image "$LOCAL_IMAGE" --name "$KIND_CLUSTER"
+
+      - name: Crear el Secret desde los secretos del pipeline
+        env:
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          POSTGRES_DB: ${{ secrets.POSTGRES_DB }}
+        run: |
+          for v in DB_USER DB_PASSWORD JWT_SECRET POSTGRES_DB; do
+            if [ -z "${!v}" ]; then echo "::error::Falta el secreto $v"; exit 1; fi
+          done
+          kubectl create secret generic gimnasio-secret \
+            --from-literal=DB_USER="$DB_USER" \
+            --from-literal=DB_PASSWORD="$DB_PASSWORD" \
+            --from-literal=JWT_SECRET="$JWT_SECRET" \
+            --from-literal=POSTGRES_DB="$POSTGRES_DB" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Desplegar PostgreSQL
+        run: |
+          kubectl apply -f kubernetes/configmap.yaml
+          kubectl apply -f kubernetes/postgres.yaml
+          kubectl rollout status deployment/postgres --timeout=180s
+
+      - name: Desplegar la API
+        run: |
+          kubectl apply -f kubernetes/deployment.yaml
+          kubectl apply -f kubernetes/service.yaml
+          # La etiqueta 1.0 no cambia: se reinicia para que los pods usen la imagen recién cargada
+          kubectl rollout restart deployment/api-gimnasio
+          kubectl rollout status deployment/api-gimnasio --timeout=240s
+          kubectl get pods,svc
+
+      - name: Prueba de humo (inicio de sesión)
+        run: |
+          kubectl port-forward svc/gimnasio-service 18080:8080 >/tmp/port-forward.log 2>&1 &
+          for i in $(seq 1 30); do
+            respuesta=$(curl -s -X POST http://localhost:18080/gimnasioAPI/auth/login \
+              -H "Content-Type: application/json" \
+              -d '{"correo":"admin@gimnasio.com","contrasena":"clave1234"}' || true)
+            if echo "$respuesta" | grep -q '"token"'; then
+              echo "Login correcto: $(echo "$respuesta" | grep -o '"rol":"[A-Z]*"')"
+              exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::La API no respondió al inicio de sesión"
+          kubectl logs deployment/api-gimnasio --tail=50
+          exit 1

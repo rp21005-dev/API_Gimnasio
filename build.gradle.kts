@@ -38,6 +38,7 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.boot:spring-boot-starter-webmvc-test") // MockMvc
     testImplementation("org.springframework.boot:spring-boot-starter-security-test") // @WithMockUser
+    testRuntimeOnly("com.h2database:h2") // Base de datos en memoria solo para las pruebas
 
     //Lombok
     compileOnly("org.projectlombok:lombok:1.18.48")

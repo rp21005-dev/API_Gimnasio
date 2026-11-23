@@ -44,4 +44,11 @@ public class ManejadorExcepciones {
                 .forEach(error -> errores.put(error.getField(), error.getDefaultMessage()));
         return ResponseEntity.badRequest().body(errores);
     }
+
+    // 400: datos invalidos segun las reglas de negocio (ej. tipo de clase no valido,
+    // dia incorrecto o cupo que supera la capacidad de la sala)
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Map<String, String>> argumentoInvalido(IllegalArgumentException e) {
+        return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+    }
 }

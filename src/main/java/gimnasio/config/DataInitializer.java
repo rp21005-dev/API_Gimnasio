@@ -13,6 +13,7 @@ import gimnasio.repository.EntrenadorRepository;
 import gimnasio.repository.MiembroRepository;
 import gimnasio.repository.SalaRepository;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,7 +23,9 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 
+// Se desactiva con DATOS_DEMO=false (por ejemplo, en producción)
 @Configuration
+@ConditionalOnProperty(name = "gimnasio.datos-demo", havingValue = "true", matchIfMissing = true)
 public class DataInitializer {
 
     // Contraseña de los usuarios de demostración (cumple la regla: 8 caracteres, letras y números)

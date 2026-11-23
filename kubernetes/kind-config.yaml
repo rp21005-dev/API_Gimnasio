@@ -1,0 +1,11 @@
+# Clúster local de un nodo para el proyecto (lo usan scripts/k8s-cluster.sh y el pipeline).
+# Expone el NodePort 30080 del Service de la API en http://localhost:30080 del equipo.
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+name: gimnasio
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - containerPort: 30080
+        hostPort: 30080
+        protocol: TCP

@@ -24,13 +24,13 @@ import java.time.LocalDate;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/asistencias")
+@RequestMapping("/gimnasioAPI/asistencias")
 public class AsistenciaController {
 
     @Autowired
     private AsistenciaService asistenciaService;
 
-    // POST /api/asistencias - Registrar asistencia de una sesión
+    // POST /gimnasioAPI/asistencias - Registrar asistencia de una sesión
     @PostMapping
     public ResponseEntity<HojaAsistenciaResponseDTO> registrarAsistencia(
             @RequestBody AsistenciaRequestDTO requestDTO,
@@ -39,7 +39,7 @@ public class AsistenciaController {
         return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
     }
 
-    // GET /api/asistencias - Consultar historial de asistencias
+    // GET /gimnasioAPI/asistencias - Consultar historial de asistencias
     @GetMapping
     public ResponseEntity<List<AsistenciaResponseDTO>> listarAsistencias(
             @RequestParam(required = false) Long miembroId,
@@ -48,14 +48,14 @@ public class AsistenciaController {
         return ResponseEntity.ok(lista);
     }
 
-    // GET /api/asistencias/{id} - Consultar detalle de una asistencia
+    // GET /gimnasioAPI/asistencias/{id} - Consultar detalle de una asistencia
     @GetMapping("/{id}")
     public ResponseEntity<AsistenciaResponseDTO> obtenerPorId(@PathVariable Long id) {
         AsistenciaResponseDTO detalle = asistenciaService.obtenerPorId(id);
         return ResponseEntity.ok(detalle);
     }
 
-    // GET /api/clases/{claseId}/sesiones/{fecha}/asistencia - Consultar hoja de asistencia de una sesión
+    // GET /gimnasioAPI/clases/{claseId}/sesiones/{fecha}/asistencia - Consultar hoja de asistencia de una sesión
     @GetMapping("/clases/{claseId}/sesiones/{fecha}/asistencia")
     public ResponseEntity<HojaAsistenciaResponseDTO> obtenerHojaAsistencia(
             @PathVariable Long claseId,
@@ -64,7 +64,7 @@ public class AsistenciaController {
         return ResponseEntity.ok(hoja);
     }
 
-    // PUT /api/asistencias/{id} - Corregir asistencia
+    // PUT /gimnasioAPI/asistencias/{id} - Corregir asistencia
     @PutMapping("/{id}")
     public ResponseEntity<AsistenciaResponseDTO> corregirAsistencia(
             @PathVariable Long id,
@@ -74,7 +74,7 @@ public class AsistenciaController {
         return ResponseEntity.ok(respuesta);
     }
 
-    // DELETE /api/asistencias/{id} - Eliminar registro de asistencia
+    // DELETE /gimnasioAPI/asistencias/{id} - Eliminar registro de asistencia
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> eliminarAsistencia(
             @PathVariable Long id,

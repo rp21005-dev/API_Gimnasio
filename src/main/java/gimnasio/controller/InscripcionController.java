@@ -21,13 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/inscripciones")
+@RequestMapping("/gimnasioAPI/inscripciones")
 public class InscripcionController {
 
     @Autowired
     private InscripcionService inscripcionService;
 
-    // POST /api/inscripciones - Inscribirse a una clase recurrente
+    // POST /gimnasioAPI/inscripciones - Inscribirse a una clase recurrente
     @PostMapping
     public ResponseEntity<InscripcionResponseDTO> inscribirse(
             @RequestBody InscripcionRequestDTO requestDTO,
@@ -36,7 +36,7 @@ public class InscripcionController {
         return new ResponseEntity<>(respuesta, HttpStatus.CREATED);
     }
 
-    // GET /api/inscripciones - Consultar inscripciones
+    // GET /gimnasioAPI/inscripciones - Consultar inscripciones
     @GetMapping
     public ResponseEntity<List<InscripcionResponseDTO>> listarInscripciones(
             @RequestParam(required = false) Long miembroId,
@@ -45,14 +45,14 @@ public class InscripcionController {
         return ResponseEntity.ok(lista);
     }
 
-    // GET /api/inscripciones/{id} - Obtener detalle de una inscripción
+    // GET /gimnasioAPI/inscripciones/{id} - Obtener detalle de una inscripción
     @GetMapping("/{id}")
     public ResponseEntity<InscripcionResponseDTO> obtenerPorId(@PathVariable Long id) {
         InscripcionResponseDTO detalle = inscripcionService.obtenerPorId(id);
         return ResponseEntity.ok(detalle);
     }
 
-    // PUT /api/inscripciones/{id} - Cambiar de clase
+    // PUT /gimnasioAPI/inscripciones/{id} - Cambiar de clase
     @PutMapping("/{id}")
     public ResponseEntity<InscripcionResponseDTO> cambiarClase(
             @PathVariable Long id,
@@ -62,7 +62,7 @@ public class InscripcionController {
         return ResponseEntity.ok(respuesta);
     }
 
-    // DELETE /api/inscripciones/{id} - Cancelar inscripción
+    // DELETE /gimnasioAPI/inscripciones/{id} - Cancelar inscripción
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> cancelarInscripcion(
             @PathVariable Long id,

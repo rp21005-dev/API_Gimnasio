@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gimnasio-config
+data:
+  # Dentro del clúster, la base de datos es el Service "postgres".
+  DB_URL: "jdbc:postgresql://postgres:5432/gimnasio"
+  # Crea los usuarios de demostración (clave1234). Poner "false" fuera del entorno académico.
+  DATOS_DEMO: "true"

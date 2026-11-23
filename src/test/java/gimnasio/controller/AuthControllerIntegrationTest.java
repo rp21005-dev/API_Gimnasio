@@ -82,6 +82,17 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
+    @DisplayName("La página web es pública, pero los datos siguen pidiendo token")
+    void paginaWebPublica() throws Exception {
+        mockMvc.perform(get("/index.html"))
+                .andExpect(status().isOk())
+                .andExpect(content().string(org.hamcrest.Matchers.containsString("id=\"login\"")));
+
+        mockMvc.perform(get("/gimnasioAPI/clases"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
     @DisplayName("Un token falso no da acceso (401)")
     void tokenInvalido() throws Exception {
         mockMvc.perform(get("/gimnasioAPI/salas").header("Authorization", "Bearer token.falso.123"))

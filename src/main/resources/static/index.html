@@ -1,0 +1,254 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gimnasio</title>
+  <style>
+    :root {
+      --fondo: #f4f5f7; --tarjeta: #ffffff; --texto: #1d2430; --suave: #5f6b7a;
+      --borde: #dde1e7; --acento: #1f6feb; --acento-texto: #ffffff;
+      --ok: #1a7f37; --ok-fondo: #dafbe1; --mal: #b42318; --mal-fondo: #fde8e7;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --fondo: #12161c; --tarjeta: #1b2129; --texto: #e6e9ee; --suave: #9aa5b4;
+        --borde: #2c3440; --acento: #4c8dff; --acento-texto: #0b0f14;
+        --ok: #5bd17a; --ok-fondo: #173322; --mal: #ff8a80; --mal-fondo: #3a1d1b;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+           background: var(--fondo); color: var(--texto); }
+    header { background: var(--tarjeta); border-bottom: 1px solid var(--borde); }
+    .barra { max-width: 1000px; margin: 0 auto; padding: 12px 16px;
+             display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .barra h1 { font-size: 18px; margin: 0; flex: 1; }
+    main { max-width: 1000px; margin: 0 auto; padding: 24px 16px; }
+    .tarjeta { background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 10px; padding: 20px; }
+    #login { max-width: 360px; margin: 40px auto; }
+    #login h2 { margin: 0 0 4px; font-size: 20px; }
+    #login p { margin: 0 0 16px; color: var(--suave); }
+    label { display: block; font-size: 13px; color: var(--suave); margin: 12px 0 4px; }
+    input, select { width: 100%; padding: 9px 10px; border: 1px solid var(--borde); border-radius: 6px;
+                    background: var(--fondo); color: var(--texto); font: inherit; }
+    button { padding: 9px 14px; border: 1px solid var(--borde); border-radius: 6px; cursor: pointer;
+             background: var(--tarjeta); color: var(--texto); font: inherit; }
+    button.principal { background: var(--acento); color: var(--acento-texto); border-color: var(--acento);
+                       width: 100%; margin-top: 18px; font-weight: 600; }
+    .pestanas { display: flex; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+    .pestanas button[aria-selected="true"] { background: var(--acento); color: var(--acento-texto); border-color: var(--acento); }
+    .usuario { color: var(--suave); font-size: 13px; }
+    .error { color: var(--mal); background: var(--mal-fondo); padding: 8px 10px; border-radius: 6px; margin-top: 12px; }
+    .vacio { color: var(--suave); text-align: center; padding: 24px; }
+    .tabla { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 640px; }
+    th, td { text-align: left; padding: 10px 8px; border-bottom: 1px solid var(--borde); vertical-align: top; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); }
+    td small { color: var(--suave); display: block; }
+    .estado { font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 99px; white-space: nowrap; }
+    .estado.ACTIVA { color: var(--ok); background: var(--ok-fondo); }
+    .estado.CERRADA { color: var(--mal); background: var(--mal-fondo); }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="barra">
+      <h1>🏋️ Gimnasio</h1>
+      <span class="usuario" id="usuario" hidden></span>
+      <button id="salir" hidden>Cerrar sesión</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Inicio de sesión -->
+    <form id="login" class="tarjeta">
+      <h2>Iniciar sesión</h2>
+      <p>Usa uno de los usuarios de demostración.</p>
+      <label for="correo">Correo</label>
+      <select id="correo">
+        <option value="admin@gimnasio.com">admin@gimnasio.com (administrador)</option>
+        <option value="entrenador@gimnasio.com">entrenador@gimnasio.com (entrenador)</option>
+        <option value="miembro@gimnasio.com">miembro@gimnasio.com (miembro)</option>
+      </select>
+      <label for="contrasena">Contraseña</label>
+      <input id="contrasena" type="password" value="clave1234" autocomplete="current-password">
+      <button class="principal" type="submit">Entrar</button>
+      <div class="error" id="errorLogin" hidden></div>
+    </form>
+
+    <!-- Contenido después de iniciar sesión -->
+    <section id="panel" hidden>
+      <div class="pestanas" role="tablist">
+        <button role="tab" data-vista="clases" aria-selected="true">Clases</button>
+        <button role="tab" data-vista="categorias">Categorías</button>
+        <button role="tab" data-vista="salas">Salas</button>
+      </div>
+      <div class="tarjeta tabla" id="contenido"></div>
+    </section>
+  </main>
+
+  <script>
+    // La página la sirve la misma API, así que las rutas son relativas
+    const API = "/gimnasioAPI";
+
+    // Columnas de cada vista: [encabezado, función que arma la celda]
+    const VISTAS = {
+      clases: {
+        ruta: "/clases",
+        vacio: "No hay clases registradas.",
+        columnas: [
+          ["Clase", c => [c.tipoClase, c.descripcion]],
+          ["Horario", c => [`${hora(c.horaInicio)} – ${hora(c.horaFin)}`, (c.diasSemana || []).join(", ")]],
+          ["Categoría", c => [c.categoriaNombre || "—"]],
+          ["Sala", c => [c.salaNombre || "—"]],
+          ["Entrenador", c => [c.entrenadorNombre || "—"]],
+          ["Cupo", c => [String(c.cupoMaximo)]],
+          ["Estado", c => estado(c.estado)],
+        ],
+      },
+      categorias: {
+        ruta: "/categorias",
+        vacio: "No hay categorías registradas.",
+        columnas: [
+          ["Categoría", c => [c.nombre, c.objetivoPrincipal]],
+          ["Tipos de clase", c => [(c.tiposClase || []).join(", ")]],
+        ],
+      },
+      salas: {
+        ruta: "/salas",
+        vacio: "No hay salas registradas.",
+        columnas: [
+          ["Código", s => [s.codigo]],
+          ["Sala", s => [s.nombre, s.descripcion]],
+          ["Ubicación", s => [s.ubicacion]],
+          ["Capacidad", s => [String(s.capacidadMaxima)]],
+        ],
+      },
+    };
+
+    const $ = id => document.getElementById(id);
+    const hora = h => (h || "").slice(0, 5);
+
+    function estado(valor) {
+      const span = document.createElement("span");
+      span.className = "estado " + valor;
+      span.textContent = valor;
+      return span;
+    }
+
+    // Sesión guardada solo en esta pestaña del navegador
+    const sesion = {
+      get: () => { try { return JSON.parse(sessionStorage.getItem("sesion")); } catch { return null; } },
+      set: s => { try { sessionStorage.setItem("sesion", JSON.stringify(s)); } catch {} },
+      borrar: () => { try { sessionStorage.removeItem("sesion"); } catch {} },
+    };
+
+    async function pedir(ruta) {
+      const s = sesion.get();
+      const r = await fetch(API + ruta, { headers: { Authorization: "Bearer " + s.token } });
+      if (r.status === 401) { salir(); throw new Error("La sesión venció. Vuelve a iniciar sesión."); }
+      if (!r.ok) throw new Error(`Error ${r.status} al consultar ${ruta}`);
+      return r.json();
+    }
+
+    // Arma la tabla con textContent (nunca innerHTML con datos de la API)
+    function tabla(vista, filas) {
+      const cont = $("contenido");
+      cont.replaceChildren();
+      if (!filas.length) {
+        const p = document.createElement("p");
+        p.className = "vacio";
+        p.textContent = vista.vacio;
+        cont.append(p);
+        return;
+      }
+      const t = document.createElement("table");
+      const cabeza = t.createTHead().insertRow();
+      for (const [titulo] of vista.columnas) {
+        const th = document.createElement("th");
+        th.textContent = titulo;
+        cabeza.append(th);
+      }
+      const cuerpo = t.createTBody();
+      for (const fila of filas) {
+        const tr = cuerpo.insertRow();
+        for (const [, celda] of vista.columnas) {
+          const td = tr.insertCell();
+          const valor = celda(fila);
+          if (valor instanceof Node) { td.append(valor); continue; }
+          const [principal, secundario] = valor;
+          td.append(principal ?? "");
+          if (secundario) {
+            const small = document.createElement("small");
+            small.textContent = secundario;
+            td.append(small);
+          }
+        }
+      }
+      cont.append(t);
+    }
+
+    async function mostrar(nombre) {
+      document.querySelectorAll("[role=tab]").forEach(b =>
+        b.setAttribute("aria-selected", b.dataset.vista === nombre));
+      const vista = VISTAS[nombre];
+      $("contenido").innerHTML = '<p class="vacio">Cargando…</p>';
+      try {
+        tabla(vista, await pedir(vista.ruta));
+      } catch (e) {
+        const p = document.createElement("p");
+        p.className = "error";
+        p.textContent = e.message;
+        $("contenido").replaceChildren(p);
+      }
+    }
+
+    function entrar(s) {
+      $("login").hidden = true;
+      $("panel").hidden = false;
+      $("salir").hidden = false;
+      $("usuario").hidden = false;
+      $("usuario").textContent = `${s.correo} · ${s.rol}`;
+      mostrar("clases");
+    }
+
+    function salir() {
+      sesion.borrar();
+      $("login").hidden = false;
+      $("panel").hidden = true;
+      $("salir").hidden = true;
+      $("usuario").hidden = true;
+    }
+
+    $("login").addEventListener("submit", async ev => {
+      ev.preventDefault();
+      $("errorLogin").hidden = true;
+      const correo = $("correo").value;
+      try {
+        const r = await fetch(API + "/auth/login", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ correo, contrasena: $("contrasena").value }),
+        });
+        const datos = await r.json().catch(() => ({}));
+        if (!r.ok) throw new Error(datos.error || "No se pudo iniciar sesión");
+        const s = { token: datos.token, rol: datos.rol, correo };
+        sesion.set(s);
+        entrar(s);
+      } catch (e) {
+        $("errorLogin").textContent = e.message;
+        $("errorLogin").hidden = false;
+      }
+    });
+
+    $("salir").addEventListener("click", salir);
+    document.querySelectorAll("[role=tab]").forEach(b =>
+      b.addEventListener("click", () => mostrar(b.dataset.vista)));
+
+    const guardada = sesion.get();
+    if (guardada && guardada.token) entrar(guardada);
+  </script>
+</body>
+</html>

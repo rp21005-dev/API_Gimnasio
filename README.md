@@ -611,6 +611,8 @@ curl -s -X POST https://api-production-359d25fa.up.railway.app/gimnasioAPI/auth/
   -d '{"correo":"admin@gimnasio.com","contrasena":"clave1234"}'
 ```
 
+**Página web:** https://api-production-359d25fa.up.railway.app/ muestra en el navegador las clases, las categorías y las salas después de iniciar sesión con un usuario de demostración. Es el archivo `src/main/resources/static/index.html` y la sirve la misma API (también en local: http://localhost:8080/).
+
 Para usar la colección de Postman contra Railway, cambiar la variable `baseUrl` de la colección a esa URL.
 
 ### Cómo está armado

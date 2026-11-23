@@ -37,6 +37,8 @@ public class SecurityConfig {
                         // Endpoints públicos: inicio de sesión y registro de miembros
                         .requestMatchers("/gimnasioAPI/auth/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.POST, "/gimnasioAPI/miembros").permitAll()
+                        // Página web sencilla para ver los datos (los datos siguen pidiendo token)
+                        .requestMatchers(HttpMethod.GET, "/", "/index.html").permitAll()
                         .anyRequest().authenticated() // Requiere JWT válido para el resto
                 )
                 // Sin token válido se responde 401 Unauthorized

@@ -1,5 +1,0 @@
-$kind: http-request
-name: Listar clases
-url: "{{baseUrl}}/clases"
-method: GET
-order: 2000

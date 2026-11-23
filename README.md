@@ -238,13 +238,15 @@ Ejemplo:
 
 ### Probar con Postman
 
-En `postman/collections/API_Gimnasio` hay una colección lista para usar:
+`API_Gimnasio.postman_collection.json` tiene todas las peticiones, organizadas en 5 carpetas (seguridad, clases, miembros, entrenadores, inscripciones y asistencias).
 
-1. Abrir la carpeta `postman/` en la **aplicación de escritorio** de Postman (Windows, macOS o Linux). La versión web no puede llamar a `localhost` sin instalar el Postman Desktop Agent.
-2. Ejecutar **Iniciar sesión** (usa el administrador de demostración). El token se guarda solo en la variable `token` de la colección.
-3. Las demás peticiones heredan ese token, así que no hay que copiarlo a mano. Si pasan 24 horas, volver a ejecutar **Iniciar sesión**.
-
-También está `API_Gimnasio.postman_collection.json` con todas las peticiones (incluidas categorías, salas, inscripciones y asistencias), para importarla con **Import** en cualquier versión de Postman.
+1. En la aplicación de escritorio de Postman, con sesión iniciada, ir a **My Workspace** → **Import** → **files** y elegir el archivo.
+2. En la pestaña **Variables** de la colección, poner en `baseUrl`:
+   - `http://localhost:8080/gimnasioAPI` para la API local (Docker o Gradle).
+   - `http://localhost:30080/gimnasioAPI` para Kubernetes local (kind).
+   - `https://api-production-359d25fa.up.railway.app/gimnasioAPI` para la API publicada en Railway.
+3. Ejecutar **1. Seguridad (JWT) → Iniciar sesión como administrador**. El token se guarda solo en la variable `token` y las demás peticiones lo usan automáticamente. Si pasan 24 horas, volver a iniciar sesión.
+4. Para probar todo de una vez: **⋯** de la colección → **Run collection** → **Run**.
 
 ### Probar con curl
 
